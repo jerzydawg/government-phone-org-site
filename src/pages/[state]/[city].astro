@@ -14,7 +14,7 @@ import {
   type CityData,
   type StateData
 } from '../../lib/city-content-variations';
-import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName, useSubdomains, getCitySubdomainURL } from '../../lib/site-config';
+import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName, useSubdomains, getCitySubdomainURL, parseSubdomain } from '../../lib/site-config';
 import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
 
 export const prerender = false;
@@ -265,6 +265,9 @@ if (getMetaVariations) {
 
 // Ensure canonical URL has trailing slash
 const citySlug = createCitySlug(cityName);
+// Detect if this page is being accessed via subdomain
+const hostname = Astro.request.headers.get('host') || '';
+const isSubdomainAccess = useSubdomains() && parseSubdomain(hostname) !== null;
 // Use subdomain URL if subdomain mode is enabled, otherwise use path-based URL
 const canonicalUrl = useSubdomains() 
   ? new URL(getCitySubdomainURL(citySlug, stateAbbr.toLowerCase()))
@@ -546,7 +549,7 @@ const howToSchema = {
           <!-- DETAILED PROGRAM HISTORY SECTION - SITE 1 ONLY -->
           <section style={`background: linear-gradient(135deg, ${designDNA.colors.primary}15, ${designDNA.colors.secondary}15);`} class="mb-16 rounded-xl p-6">
             <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
-              Understanding Federal Communication Programs in {cityName}
+              Understanding Free Government Phone Programs in {cityName}
             </h2>
             
             <div class="prose max-w-none">
@@ -704,7 +707,7 @@ const howToSchema = {
             </div>
 
             <div class="bg-[#F8F9FA] rounded-lg p-6">
-              <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-4 ">Step 4: Receive Your Free Phone</h3>
+              <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-4 ">Step 4: Receive Your Free Government Phone</h3>
               <p class="text-gray-900 text-[#6B7280] leading-relaxed">
                 {variations.step4}
               </p>

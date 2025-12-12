@@ -56,25 +56,8 @@ let structuredData = {};
 try {
   // Check if Supabase is available
   if (!supabase) {
-    stateData = getFallbackStateData(stateUpper);
-    cities = getFallbackCities(stateUpper);
-    // Generate SEO content for fallback data using variations if available
-    if (stateData && getMetaVariations) {
-      try {
-        const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
-        seoTitle = metaContent.title;
-        seoDescription = metaContent.description;
-      } catch (metaError: any) {
-        console.error('Error getting meta variations for state page (no Supabase):', metaError?.message || metaError);
-        // Fallback to hardcoded values
-        seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
-        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-      }
-    } else if (stateData) {
-      // Fallback to hardcoded values if variations not available
-      seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
-      seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-    }
+    // No Supabase - return 404 (no fallback data to prevent duplicate content)
+    return Astro.redirect('/404');
   } else {
     // Fetch state data
     const { data, error } = await supabase
@@ -86,31 +69,13 @@ try {
     stateData = data;
     stateError = error;
     
-    // If Supabase returns an error or no data, use fallback data
+    // If Supabase returns an error or no data, return 404 (no fallback data)
     if (stateError || !stateData) {
       // Only log actual errors, not null values
       if (stateError) {
         console.error('Supabase error fetching state data:', stateError);
       }
-      stateData = getFallbackStateData(stateUpper);
-      cities = getFallbackCities(stateUpper);
-      // Generate SEO content for fallback data using variations if available
-      if (stateData && getMetaVariations) {
-        try {
-          const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
-          seoTitle = metaContent.title;
-          seoDescription = metaContent.description;
-        } catch (metaError: any) {
-          console.error('Error getting meta variations for state page (Supabase error):', metaError?.message || metaError);
-          // Fallback to hardcoded values
-          seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
-          seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-        }
-      } else if (stateData) {
-        // Fallback to hardcoded values if variations not available
-        seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
-        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-      }
+      return Astro.redirect('/404');
     } else {
       // Generate SEO content using keyword variations
       if (getMetaVariations) {
@@ -178,139 +143,23 @@ try {
           }
         } else {
           console.error('Error fetching cities:', citiesError);
-          // Use fallback data on error
-          cities = getFallbackCities(stateData.abbreviation);
+          cities = [];
         }
       } catch (error) {
         console.error('Error fetching cities:', error);
-        // Use fallback data on error
-        cities = getFallbackCities(stateData.abbreviation);
+        cities = [];
       }
     }
   }
   
 } catch (error) {
   console.error('Failed to initialize Supabase client:', error);
-  // Use fallback data instead of redirecting
-  stateData = getFallbackStateData(stateUpper);
-  cities = getFallbackCities(stateUpper);
-  
-  // Generate SEO content for fallback data using variations if available
-  if (stateData) {
-    if (getMetaVariations) {
-      try {
-        const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
-        seoTitle = metaContent.title;
-        seoDescription = metaContent.description;
-      } catch (metaError: any) {
-        console.error('Error getting meta variations for fallback state page:', metaError?.message || metaError);
-        // Fallback to hardcoded values
-        seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
-        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-      }
-    } else {
-      // Fallback to hardcoded values if variations not available
-      seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
-      seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-    }
-    seoKeywords = `free government phone ${stateData.name}, ${stateData.name} government phone, free phone ${stateData.name}, ACP ${stateData.name}, Lifeline ${stateData.name}`;
-    
-    // Generate structured data
-    structuredData = {
-      "@context": "https://schema.org",
-      "@type": "State",
-      "name": stateData.name,
-      "address": {
-        "@type": "PostalAddress",
-        "addressRegion": stateData.abbreviation,
-        "addressCountry": "US"
-      },
-      "description": `Government phone programs available in ${stateData.name}`,
-      "url": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
-    };
-  }
+  // No fallback data - return 404 to prevent duplicate content
+  return Astro.redirect('/404');
 }
 
-// Fallback cities function
-function getFallbackCities(stateAbbr) {
-  const fallbackCities = {
-    'GA': [
-      { name: 'Atlanta', population: 498715 },
-      { name: 'Augusta', population: 202081 },
-      { name: 'Columbus', population: 195769 },
-      { name: 'Macon', population: 153159 },
-      { name: 'Savannah', population: 147780 },
-      { name: 'Athens', population: 127315 },
-      { name: 'Sandy Springs', population: 108080 },
-      { name: 'Roswell', population: 94844 },
-      { name: 'Albany', population: 69019 },
-      { name: 'Johns Creek', population: 84579 }
-    ],
-    'TX': [
-      { name: 'Houston', population: 2320268 },
-      { name: 'San Antonio', population: 1547253 },
-      { name: 'Dallas', population: 1343573 },
-      { name: 'Austin', population: 978908 },
-      { name: 'Fort Worth', population: 918915 },
-      { name: 'Arlington', population: 398112 },
-      { name: 'Plano', population: 285494 },
-      { name: 'Lubbock', population: 257141 },
-      { name: 'Laredo', population: 255205 },
-      { name: 'Amarillo', population: 199924 }
-    ],
-    'CA': [
-      { name: 'Los Angeles', population: 3979576 },
-      { name: 'San Diego', population: 1423851 },
-      { name: 'San Jose', population: 1030119 },
-      { name: 'San Francisco', population: 873965 },
-      { name: 'Fresno', population: 542107 },
-      { name: 'Sacramento', population: 513624 },
-      { name: 'Long Beach', population: 466742 },
-      { name: 'Oakland', population: 440646 },
-      { name: 'Bakersfield', population: 403455 },
-      { name: 'Anaheim', population: 346824 }
-    ],
-    'NY': [
-      { name: 'New York', population: 8336817 },
-      { name: 'Buffalo', population: 255284 },
-      { name: 'Rochester', population: 205695 },
-      { name: 'Yonkers', population: 200370 },
-      { name: 'Syracuse', population: 142749 },
-      { name: 'Albany', population: 100826 },
-      { name: 'New Rochelle', population: 79226 },
-      { name: 'Mount Vernon', population: 72725 },
-      { name: 'Schenectady', population: 66135 },
-      { name: 'Utica', population: 60100 }
-    ],
-    'FL': [
-      { name: 'Jacksonville', population: 949611 },
-      { name: 'Miami', population: 442241 },
-      { name: 'Tampa', population: 384959 },
-      { name: 'Orlando', population: 307573 },
-      { name: 'St. Petersburg', population: 258308 },
-      { name: 'Hialeah', population: 223109 },
-      { name: 'Tallahassee', population: 194500 },
-      { name: 'Fort Lauderdale', population: 182595 },
-      { name: 'Port St. Lucie', population: 195248 },
-      { name: 'Cape Coral', population: 194016 }
-    ]
-  };
-  
-  return fallbackCities[stateAbbr] || [];
-}
-
-// Fallback state data function
-function getFallbackStateData(stateAbbr) {
-  const fallbackStates = {
-    'GA': { name: 'Georgia', abbreviation: 'GA', id: 1 },
-    'TX': { name: 'Texas', abbreviation: 'TX', id: 2 },
-    'CA': { name: 'California', abbreviation: 'CA', id: 3 },
-    'NY': { name: 'New York', abbreviation: 'NY', id: 4 },
-    'FL': { name: 'Florida', abbreviation: 'FL', id: 5 }
-  };
-  
-  return fallbackStates[stateAbbr] || null;
-}
+// No fallback data - prevents duplicate content across sites
+// If Supabase data is not found, return 404
 
 // If no state data found, redirect to 404
 if (!stateData) {
@@ -323,6 +172,26 @@ const variations = getStateContentVariations(DOMAIN, stateData.name, stateData.a
 const canonicalURL = useSubdomains() 
   ? getStateSubdomainURL(stateData.abbreviation.toLowerCase())
   : `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`;
+
+// Generate state-specific H1 - use headingIntro from variations which is state-specific
+const stateH1 = variations.headingIntro || `Free Government Phone in ${stateData.name}`;
+
+// Ensure SEO title includes state name if not already set properly
+if (!seoTitle || !seoTitle.includes(stateData.name)) {
+  if (getMetaVariations) {
+    try {
+      const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+      seoTitle = metaContent.title;
+      seoDescription = metaContent.description;
+    } catch (metaError: any) {
+      seoTitle = `Free Government Phone in ${stateData.name} | Get FREE Phone Service 2025`;
+      seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities.`;
+    }
+  } else {
+    seoTitle = `Free Government Phone in ${stateData.name} | Get FREE Phone Service 2025`;
+    seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities.`;
+  }
+}
 ---
 
 <Layout
@@ -398,7 +267,7 @@ const canonicalURL = useSubdomains()
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto text-center">
           <h1 class="text-gray-900 text-4xl md:text-6xl font-bold mb-6 ">
-            {variations.headingIntro}
+            {stateH1}
           </h1>
           <p class="text-gray-900 text-xl md:text-2xl mb-8 text-white" set:html={variations.intro} />
 
@@ -418,7 +287,7 @@ const canonicalURL = useSubdomains()
     <section class="py-12 bg-white">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
-          <h2 class="text-gray-900 text-3xl font-bold text-center mb-8 ">Available Programs</h2>
+          <h2 class="text-gray-900 text-3xl font-bold text-center mb-8 ">Free Government Phone Programs in {stateData.name}</h2>
           <p class="text-gray-900 text-center mb-8 " set:html={variations.programsAvailable} />
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-gray-50 p-6 rounded-lg">

@@ -5,53 +5,11 @@
       "has": [
         {
           "type": "host",
-          "value": "www.government-phone.org"
+          "value": "www.(?<domain>.*)"
         }
       ],
-      "destination": "https://government-phone.org/:path*",
+      "destination": "https://:domain/:path*",
       "permanent": true
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?<state>[a-z]{2})\\.(?<domain>.*)"
-        }
-      ],
-      "destination": "/:state/"
-    },
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?<city>[a-z0-9-]+)-(?<state>[a-z]{2})\\.(?<domain>.*)"
-        }
-      ],
-      "destination": "/:state/:city/"
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?<state>[a-z]{2})\\.(?<domain>.*)"
-        }
-      ],
-      "destination": "/:state/"
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?<city>[a-z0-9-]+)-(?<state>[a-z]{2})\\.(?<domain>.*)"
-        }
-      ],
-      "destination": "/:state/:city/"
     }
   ]
 }

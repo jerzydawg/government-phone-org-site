@@ -7,12 +7,33 @@ import FeaturesSection from '../components/sections/FeaturesSection.astro';
 import StatesSection from '../components/sections/StatesSection.astro';
 import CitiesSection from '../components/sections/CitiesSection.astro';
 import CTASection from '../components/sections/CTASection.astro';
-import { getSiteConfig, getDesignDNA, getSiteName, getKeyword, getDomain, getSiteURL, getKeywordId } from '../lib/site-config';
+import { getSiteConfig, getDesignDNA, getSiteName, getKeyword, getDomain, getSiteURL, getKeywordId, useSubdomains, parseSubdomain } from '../lib/site-config';
 import { generateCSSVariables, getGoogleFontsURL } from '../lib/design-dna';
 import { getContentVariations } from '../lib/city-content-variations';
 import { loadKeywordVariations } from '../lib/variations/shared/keyword-loader';
 
 export const prerender = false;
+
+// Check if this is a subdomain request (for city or state pages)
+// For new sites, subdomains will be used from the start
+const hostname = Astro.request.headers.get('host') || '';
+const subdomainInfo = useSubdomains() ? parseSubdomain(hostname) : null;
+const subdomainPart = hostname.split('.')[0];
+const isStateSubdomain = subdomainPart.length === 2 && /^[a-z]{2}$/.test(subdomainPart);
+
+// If subdomain detected, use Astro.rewrite() to render the city/state page
+// This keeps the clean subdomain URL (wayne-nj.domain.com/) while rendering the full page content
+if (useSubdomains() && (subdomainInfo || isStateSubdomain)) {
+  if (subdomainInfo) {
+    // City subdomain: wayne-nj.domain.com/ -> rewrite to /nj/wayne/
+    const rewritePath = `/${subdomainInfo.state}/${subdomainInfo.city}/`;
+    return Astro.rewrite(rewritePath);
+  } else if (isStateSubdomain) {
+    // State subdomain: nj.domain.com/ -> rewrite to /nj/
+    const rewritePath = `/${subdomainPart}/`;
+    return Astro.rewrite(rewritePath);
+  }
+}
 
 // Get site configuration
 const siteConfig = getSiteConfig();

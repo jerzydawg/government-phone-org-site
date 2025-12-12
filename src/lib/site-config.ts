@@ -37,7 +37,7 @@ const SITE_CONFIG_DATA = {
   keywordLabel: "Free Government Phone",
   ownerEmail: "smartguru6892@gmail.com",
   designStyle: "advanced" as DesignStyle,
-      useSubdomains: true,
+  useSubdomains: false,
   environment: "production" as const,
   createdAt: "2025-12-12T14:16:25.666Z",
   version: "1.0.0"

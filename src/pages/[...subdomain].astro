@@ -1,68 +1,78 @@
 ---
-// Subdomain handler for city pages
-// Handles requests like: wayne-mi.free-government-phone.org/
+// Clean subdomain handler - renders content directly without redirects
+// Handles: nj.domain.com/ (state) and wayne-nj.domain.com/ (city)
 import Layout from '../layouts/Layout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import RelatedCities from '../components/RelatedCities.astro';
-import SimilarCities from '../components/SimilarCities.astro';
 import RelatedContent from '../components/RelatedContent.astro';
+import RegionalStates from '../components/RegionalStates.astro';
 import { supabase } from '../lib/supabase';
-import { createCitySlug, slugToCityName, generateCityNameVariationsForLookup } from '../lib/slug-utils.js';
+import { createCitySlug, generateCityNameVariationsForLookup } from '../lib/slug-utils.js';
 import { 
   getCityContentVariations,
   getCityStats,
   getCityFacts,
-  type CityData,
-  type StateData
+  type CityData
 } from '../lib/city-content-variations';
-import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName, useSubdomains, parseSubdomain, getCitySubdomainURL } from '../lib/site-config';
+import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName, useSubdomains, parseSubdomain, getCitySubdomainURL, getStateSubdomainURL } from '../lib/site-config';
+import { getStateContentVariations } from '../lib/state-content-variations';
 import { loadKeywordVariations } from '../lib/variations/shared/keyword-loader';
 
 export const prerender = false;
 
-// Only handle subdomain requests if subdomain mode is enabled
 const domain = getDomain();
 const host = Astro.request.headers.get('host') || '';
-const subdomainInfo = parseSubdomain(host);
-const subdomainPart = host.split('.')[0];
+const url = new URL(Astro.request.url);
+const pathname = url.pathname;
 
-// Check if it's a state subdomain (2-letter abbreviation, e.g., "nj")
-const isStateSubdomain = subdomainPart.length === 2 && /^[a-z]{2}$/.test(subdomainPart);
-
-// If not a subdomain request or subdomain mode disabled, return 404
+// Only handle subdomain requests if subdomain mode is enabled
 if (!useSubdomains()) {
   return Astro.redirect('/404', 404);
 }
 
-// If it's a state subdomain, let it pass through to [state]/index.astro via Vercel rewrite
-if (isStateSubdomain && !subdomainInfo) {
-  return; // Let Vercel rewrite handle it
-}
+// Parse subdomain info
+const subdomainInfo = parseSubdomain(host);
+const subdomainPart = host.split('.')[0];
+const isStateSubdomain = subdomainPart.length === 2 && /^[a-z]{2}$/.test(subdomainPart);
 
-// If it's not a valid city subdomain, return 404
-if (!subdomainInfo) {
+// Determine if this is a state or city request
+let stateAbbr: string | null = null;
+let citySlug: string | null = null;
+let isStateRequest = false;
+let isCityRequest = false;
+
+// CRITICAL: Only handle subdomain root requests (pathname === '/')
+// When Vercel rewrites nj.domain.com/ to /nj/, that path should be handled by [state]/index.astro
+// This route should ONLY handle the subdomain root path
+if (pathname === '/') {
+  if (subdomainInfo) {
+    // City subdomain: wayne-nj.domain.com/
+    stateAbbr = subdomainInfo.state;
+    citySlug = subdomainInfo.city;
+    isCityRequest = true;
+  } else if (isStateSubdomain) {
+    // State subdomain: nj.domain.com/
+    stateAbbr = subdomainPart.toLowerCase();
+    isStateRequest = true;
+  }
+} else {
+  // Path is not root - let specific routes handle it
+  // This allows [state]/index.astro and [state]/[city].astro to handle rewritten paths
   return Astro.redirect('/404', 404);
 }
 
-// Vercel rewrites subdomains to paths like /nj/wayne/, so we should allow those paths
-// Only redirect if it's an unexpected path that doesn't match the rewrite pattern
-const url = new URL(Astro.request.url);
-const isRewrittenPath = url.pathname.match(/^\/([a-z]{2})\/?$/) || url.pathname.match(/^\/([a-z]{2})\/([a-z0-9-]+)\/?$/);
-if (!isRewrittenPath && url.pathname !== '/') {
-  return Astro.redirect(`https://${host}/`, 301);
+// If we couldn't determine what to render, return 404
+if (!stateAbbr || (!isStateRequest && !isCityRequest)) {
+  return Astro.redirect('/404', 404);
 }
-
-const { city: citySlug, state: stateAbbr } = subdomainInfo;
-
-// Get Design DNA for dynamic colors
-const designDNA = getDesignDNA();
 
 const SITE_URL = getSiteURL();
 const DOMAIN = getDomain();
 const SITE_NAME = getSiteName();
 const keywordId = getKeywordId();
+const designDNA = getDesignDNA();
 
-// Load keyword-specific variations for city pages with error handling
+// Load keyword variations
 let getH1Variation: any = null;
 let getH3Variation: any = null;
 let getMetaVariations: any = null;
@@ -78,423 +88,391 @@ try {
     getMetaVariations = keywordModule.getMetaVariations;
   }
 } catch (e: any) {
-  console.error('Failed to load keyword variations for city page:', e?.message || e);
+  console.error('Failed to load keyword variations:', e?.message || e);
   getH1Variation = () => ({ h1: 'Free Government Phone' });
   getH3Variation = () => ({ h3: 'Free Government Phone' });
 }
 
-// Fetch city data from Supabase
-let cityData = null;
-let stateData = null;
-let error = null;
+// Initialize render data
+let renderType: 'state' | 'city' | null = null;
+let stateData: any = null;
+let cityData: any = null;
+let cities: any[] = [];
+let seoTitle = '';
+let seoDescription = '';
+let seoKeywords = '';
+let structuredData: any = {};
+let variations: any = null;
+let canonicalURL = '';
+let stateH1 = '';
+let cityH1 = '';
+let cityName = '';
+let stateName = '';
+let stateAbbreviation = '';
+let population = 0;
+let cityFacts: string[] = [];
+let relatedCities: any[] = [];
+let breadcrumbItems: any[] = [];
 
-// Check if Supabase is available
-if (!supabase) {
-  console.error('Supabase client not available - missing environment variables');
-  error = 'Database not configured';
-} else {
+// No fallback data - prevents duplicate content across sites
+// If Supabase data is not found, return 404
+
+// ===== STATE PAGE DATA =====
+if (isStateRequest) {
+  renderType = 'state';
+  
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('states')
+        .select('*')
+        .eq('abbreviation', stateAbbr!.toUpperCase())
+        .maybeSingle();
+      
+      if (!data || error) {
+        return Astro.redirect('/404', 404);
+      }
+      
+      stateData = data;
+      
+      const { data: citiesData } = await supabase
+        .from('cities')
+        .select('*')
+        .eq('state_id', stateData.id)
+        .order('population', { ascending: false })
+        .limit(20);
+      
+      cities = citiesData || [];
+      
+      if (getMetaVariations) {
+        try {
+          const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+          seoTitle = metaContent.title;
+          seoDescription = metaContent.description;
+        } catch (e: any) {
+          seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+          seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs.`;
+        }
+      } else {
+        seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs.`;
+      }
+      
+      structuredData = {
+        "@context": "https://schema.org",
+        "@type": "State",
+        "name": stateData.name,
+        "address": {
+          "@type": "PostalAddress",
+          "addressRegion": stateData.abbreviation,
+          "addressCountry": "US"
+        }
+      };
+    } catch (e: any) {
+      console.error('Error fetching state data:', e);
+      return Astro.redirect('/404', 404);
+    }
+  } else {
+    // No Supabase - return 404
+    return Astro.redirect('/404', 404);
+  }
+
+  if (!stateData) {
+    return Astro.redirect('/404', 404);
+  }
+
+  variations = getStateContentVariations(DOMAIN, stateData.name, stateData.abbreviation);
+  canonicalURL = getStateSubdomainURL(stateData.abbreviation.toLowerCase());
+  breadcrumbItems = [{ label: 'Home', href: '/' }, { label: stateData.name }];
+  
+  // Generate state-specific H1 - ensure it's always set with proper fallback
+  // Use headingIntro from variations which is state-specific and contains keyword
+  stateH1 = variations?.headingIntro || `Free Government Phone in ${stateData.name}`;
+  
+  // Try to enhance with H1 variation if available, but always keep fallback
+  if (getH1Variation) {
+    try {
+      const h1Variation = getH1Variation(DOMAIN, 'state', undefined, stateData.abbreviation);
+      if (h1Variation?.h1 && h1Variation.h1.includes(stateData.name)) {
+        stateH1 = h1Variation.h1;
+      }
+    } catch (e: any) {
+      // Keep existing stateH1 (already set above)
+    }
+  }
+  
+  // Final fallback to ensure stateH1 is never empty
+  if (!stateH1 || stateH1.trim() === '') {
+    stateH1 = `Free Government Phone in ${stateData.name}`;
+  }
+  
+  // Ensure SEO title includes state name if not already set
+  if (!seoTitle || !seoTitle.includes(stateData.name)) {
+    if (getMetaVariations) {
+      try {
+        const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+        seoTitle = metaContent.title;
+        seoDescription = metaContent.description;
+      } catch (e: any) {
+        seoTitle = `Free Government Phone in ${stateData.name} | Get FREE Phone Service 2025`;
+        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities.`;
+      }
+    } else {
+      seoTitle = `Free Government Phone in ${stateData.name} | Get FREE Phone Service 2025`;
+      seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities.`;
+    }
+  }
+}
+
+// ===== CITY PAGE DATA =====
+if (isCityRequest && citySlug && stateAbbr) {
+  renderType = 'city';
+  
+  if (!supabase) {
+    return Astro.redirect('/404', 404);
+  }
+
   try {
-    // Get state data
     const { data: stateResult, error: stateError } = await supabase
       .from('states')
       .select('*')
       .eq('abbreviation', stateAbbr.toUpperCase())
       .maybeSingle();
       
-    if (stateError) {
-      console.error('State lookup error:', stateError);
-      error = 'State not found';
-    } else if (!stateResult) {
-      error = 'State not found';
-    } else {
-      stateData = stateResult;
+    if (stateError || !stateResult) {
+      return Astro.redirect('/404', 404);
     }
     
-    // Get city data
-    if (stateData && !error) {
-      // Generate all possible city name variations
-      const nameVariations = generateCityNameVariationsForLookup(citySlug);
-      let cityResult = null;
-      let cityError = null;
-      
-      // Try each variation until we find a match
-      for (const cityName of nameVariations) {
-        const result = await supabase
-          .from('cities')
-          .select('*')
-          .eq('state_id', stateData.id)
-          .eq('name', cityName)
-          .maybeSingle();
-          
-        if (result.error) {
-          cityError = result.error;
-          continue;
-        }
+    stateData = stateResult;
+    
+    const nameVariations = generateCityNameVariationsForLookup(citySlug);
+    let cityResult = null;
+    
+    for (const cityNameVar of nameVariations) {
+      const result = await supabase
+        .from('cities')
+        .select('*')
+        .eq('state_id', stateData.id)
+        .eq('name', cityNameVar)
+        .maybeSingle();
         
-        if (result.data) {
-          cityResult = result.data;
-          break;
+      if (result.data) {
+        cityResult = result.data;
+        break;
+      }
+    }
+    
+    if (!cityResult) {
+      return Astro.redirect('/404', 404);
+    }
+    
+    cityData = cityResult;
+    cityName = cityData.name;
+    stateName = stateData.name;
+    stateAbbreviation = stateData.abbreviation;
+    const cityStats = getCityStats(cityData as CityData);
+    population = cityStats.population || cityData.population || 0;
+    variations = getCityContentVariations(DOMAIN, cityName, stateAbbreviation, population);
+    
+    const cityDataForFacts: CityData = {
+      id: cityData.id || 0,
+      name: cityData.name,
+      state_id: stateData.id,
+      population: cityData.population,
+      stats: cityData.stats
+    };
+    cityFacts = getCityFacts(cityName, stateName, stateAbbreviation, cityDataForFacts);
+
+    if (getMetaVariations) {
+      try {
+        const metaResult = getMetaVariations(SITE_NAME, DOMAIN, 'city', cityName, stateName);
+        if (metaResult && metaResult.title && metaResult.description) {
+          seoTitle = metaResult.title;
+          seoDescription = metaResult.description;
+        } else {
+          seoTitle = `Free Government Phone in ${cityName}, ${stateAbbreviation}`;
+          seoDescription = `Get free government phone service in ${cityName}, ${stateAbbreviation}. Check eligibility and apply today.`;
         }
+      } catch (e: any) {
+        seoTitle = `Free Government Phone in ${cityName}, ${stateAbbreviation}`;
+        seoDescription = `Get free government phone service in ${cityName}, ${stateAbbreviation}. Check eligibility and apply today.`;
       }
+    } else {
+      seoTitle = `Free Government Phone in ${cityName}, ${stateAbbreviation}`;
+      seoDescription = `Get free government phone service in ${cityName}, ${stateAbbreviation}. Check eligibility and apply today.`;
+    }
+
+    // Generate city-specific H1 - ensure it's always set with proper fallback
+    cityH1 = `Free Government Phone in ${cityName}, ${stateAbbreviation}`;
+    
+    // Try to enhance with H1 variation if available
+    if (getH1Variation) {
+      try {
+        const h1Content = getH1Variation(DOMAIN, 'city', cityName, stateAbbreviation);
+        if (h1Content?.h1 && h1Content.h1.includes(cityName)) {
+          cityH1 = h1Content.h1;
+        }
+      } catch (e: any) {
+        // Keep existing cityH1 (already set above)
+      }
+    }
+    
+    // Final fallback to ensure cityH1 is never empty
+    if (!cityH1 || cityH1.trim() === '') {
+      cityH1 = `Free Government Phone in ${cityName}, ${stateAbbreviation}`;
+    }
+
+    canonicalURL = getCitySubdomainURL(createCitySlug(cityName), stateAbbreviation.toLowerCase());
+    breadcrumbItems = [
+      { label: 'Home', href: '/' },
+      { label: stateName, href: getStateSubdomainURL(stateAbbreviation.toLowerCase()) },
+      { label: cityName, href: canonicalURL }
+    ];
+
+    // Fetch related cities
+    try {
+      const { data: relatedCitiesData } = await supabase
+        .from('cities')
+        .select('id, name, population')
+        .eq('state_id', stateData.id)
+        .neq('id', cityData.id)
+        .order('population', { ascending: false })
+        .limit(9);
       
-      if (cityError) {
-        console.error('City lookup error:', cityError);
-        error = 'City lookup failed';
-      } else if (!cityResult) {
-        error = 'City not found';
-      } else {
-        cityData = cityResult;
+      if (relatedCitiesData) {
+        relatedCities = relatedCitiesData.map(city => ({
+          name: city.name,
+          state_abbreviation: stateData.abbreviation,
+          population: city.population,
+          id: city.id
+        }));
       }
+    } catch (err) {
+      console.error('Error fetching related cities:', err);
     }
   } catch (e: any) {
     console.error('Error fetching city data:', e);
-    error = 'Database error';
+    return Astro.redirect('/404', 404);
   }
 }
 
-// If we couldn't find the city, return 404
-if (error || !cityData || !stateData) {
+if (!renderType) {
   return Astro.redirect('/404', 404);
 }
-
-const cityName = cityData.name;
-const stateName = stateData.name;
-const stateAbbreviation = stateData.abbreviation;
-
-// Get city statistics
-const cityStats = getCityStats(cityData as CityData);
-const population = cityStats.population || cityData.population || 0;
-
-// Get COMPOUND-HASH content variations for 99-100% uniqueness across 1000+ sites
-const variations = getCityContentVariations(
-  DOMAIN,
-  cityName,
-  stateAbbreviation,
-  population
-);
-
-// Get city facts
-const cityDataForFacts: CityData = {
-  id: cityData.id || 0,
-  name: cityData.name,
-  state_id: stateData.id,
-  population: cityData.population,
-  stats: cityData.stats
-};
-const cityFacts = getCityFacts(cityName, stateName, stateAbbreviation, cityDataForFacts);
-
-// Fetch related cities from same state
-let relatedCities: Array<{
-  name: string;
-  state_abbreviation: string;
-  population?: number;
-  id?: number;
-}> = [];
-
-if (cityData && stateData && supabase && !error) {
-  try {
-    const { data: relatedCitiesData } = await supabase
-      .from('cities')
-      .select('id, name, population')
-      .eq('state_id', stateData.id)
-      .neq('id', cityData.id)
-      .order('population', { ascending: false })
-      .limit(9);
-    
-    if (relatedCitiesData) {
-      relatedCities = relatedCitiesData.map(city => ({
-        name: city.name,
-        state_abbreviation: stateData.abbreviation,
-        population: city.population,
-        id: city.id
-      }));
-    }
-  } catch (err) {
-    console.error('Error fetching related cities:', err);
-  }
-}
-
-// Fetch similar cities from OTHER states (by similar population)
-let similarCities: Array<{
-  name: string;
-  state_abbr: string;
-  state_name: string;
-  population?: number;
-}> = [];
-
-if (cityData && stateData && supabase && !error) {
-  try {
-    const pop = cityData.population || 50000;
-    const minPop = Math.max(1000, pop * 0.5);
-    const maxPop = pop * 2;
-    
-    const { data: similarData } = await supabase
-      .from('cities')
-      .select('name, population, state_id, states(abbreviation, name)')
-      .neq('state_id', stateData.id)
-      .gte('population', minPop)
-      .lte('population', maxPop)
-      .order('population', { ascending: false })
-      .limit(12);
-    
-    if (similarData) {
-      similarCities = similarData.map((city: any) => ({
-        name: city.name,
-        state_abbr: city.states?.abbreviation || '',
-        state_name: city.states?.name || '',
-        population: city.population
-      })).filter((c: any) => c.state_abbr);
-    }
-  } catch (err) {
-    console.error('Error fetching similar cities:', err);
-  }
-}
-
-// Get meta content
-let metaContent = { 
-  title: `Free Government Phone in ${cityName}, ${stateAbbreviation}`, 
-  description: `Get free government phone service in ${cityName}, ${stateAbbreviation}. Check eligibility and apply today.` 
-};
-
-if (getMetaVariations) {
-  try {
-    const metaResult = getMetaVariations(SITE_NAME, DOMAIN, 'city', cityName, stateName);
-    if (metaResult && metaResult.title && metaResult.description) {
-      metaContent = metaResult;
-    }
-  } catch (metaError: any) {
-    console.error('Error getting meta variations for city page:', metaError?.message || metaError);
-  }
-}
-
-// Get dynamic H1 variation for city page
-let cityH1 = `Free Government Phone in ${cityName}, ${stateAbbreviation}`;
-if (getH1Variation) {
-  try {
-    const h1Content = getH1Variation(DOMAIN, 'city', cityName, stateAbbreviation);
-    cityH1 = h1Content.h1;
-  } catch (h1Error: any) {
-    console.error('Error getting H1 variation for city page:', h1Error?.message || h1Error);
-  }
-}
-
-const title = metaContent.title;
-const description = metaContent.description;
-
-// Generate canonical URL using subdomain format
-const canonicalUrl = getCitySubdomainURL(createCitySlug(cityName), stateAbbreviation.toLowerCase());
-
-// Enhanced structured data with city-specific information
-const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": `Free Government Phone in ${cityName}, ${stateAbbreviation}`,
-  "description": description,
-  "url": canonicalUrl,
-  "mainEntity": {
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": `Who qualifies for free government phone service in ${cityName}?`,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": `Residents of ${cityName}, ${stateAbbreviation} may qualify for free government phone service if they participate in qualifying government assistance programs or meet income requirements.`
-        }
-      }
-    ]
-  }
-};
-
-const citySchema = {
-  "@context": "https://schema.org",
-  "@type": "City",
-  "name": cityName,
-  "containedIn": {
-    "@type": "State",
-    "name": stateName,
-    "abbreviation": stateAbbreviation
-  }
-};
-
-const breadcrumbSchema = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": SITE_URL
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": stateName,
-      "item": `${SITE_URL}/${stateAbbreviation.toLowerCase()}/`
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": cityName,
-      "item": canonicalUrl
-    }
-  ]
-};
-
-// Breadcrumb items
-const breadcrumbItems = [
-  { label: 'Home', href: '/' },
-  { label: stateName, href: `/${stateAbbreviation.toLowerCase()}/` },
-  { label: cityName, href: canonicalUrl }
-];
-
 ---
 
-<Layout title={title} description={description} canonicalURL={canonicalUrl}>
-  <!-- Structured Data -->
-  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
-  <script type="application/ld+json" set:html={JSON.stringify(citySchema)} />
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
-
-  <!-- Hero Section - Uses Design DNA colors -->
-  <section class="relative overflow-hidden text-white" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`}>
-    <div class="container mx-auto px-4 py-10 md:py-24 relative z-10">
-      <div class="max-w-4xl mx-auto text-center">
-        <h1 class="text-gray-900 text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-          {cityH1}
-        </h1>
-        <p class="text-gray-900 text-xl md:text-2xl mb-8 text-white max-w-3xl mx-auto">
-          Access free smartphone and monthly service through the Lifeline & ACP programs. 
-          <span class="text-gray-900 font-semibold ">No credit check, no hidden fees, instant approval.</span>
-        </p>
-        
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-          <a href="/apply" class="btn-accent text-lg px-8 py-4 font-bold shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-300 inline-block text-center">
-            Verify Eligibility Now
-          </a>
-          <a href="/providers" class="btn-primary text-lg px-8 py-4 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 inline-block text-center">
-            View Providers
-          </a>
-        </div>
-        
-        <!-- Trust Badges -->
-        <div class="flex flex-wrap justify-center items-center gap-6 opacity-90">
-          <div class="trust-badge">
-            <div class="flex items-center space-x-2">
-              <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-gray-900 text-sm font-medium">FCC Approved</span>
-            </div>
-          </div>
-          <div class="trust-badge">
-            <div class="flex items-center space-x-2">
-              <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <span class="text-gray-900 text-sm font-medium">No Credit Check</span>
-            </div>
-          </div>
-          <div class="trust-badge">
-            <div class="flex items-center space-x-2">
-              <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-gray-900 text-sm font-medium">Instant Approval</span>
+{renderType === 'state' && stateData && (
+  <Layout title={seoTitle} description={seoDescription} canonicalURL={canonicalURL}>
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <main class="min-h-screen bg-gray-50">
+      <Breadcrumbs items={breadcrumbItems} />
+      <section style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`} class="text-white py-10">
+        <div class="container mx-auto px-4">
+          <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-gray-900 text-4xl md:text-6xl font-bold mb-6">{stateH1}</h1>
+            <p class="text-gray-900 text-xl md:text-2xl mb-8 text-white" set:html={variations.intro} />
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <a href="/apply" class="bg-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block text-center" style={`color: ${designDNA.colors.primary};`}>Check Eligibility</a>
+              <a href="/apply" class="border-2 text-white px-8 py-3 rounded-lg font-semibold hover:bg-white transition-colors inline-block text-center" style={`border-color: white;`}>View Programs</a>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Breadcrumbs with Schema -->
-  <Breadcrumbs items={breadcrumbItems} />
-
-  <!-- Main Content -->
-  <div class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-      <!-- Main Article Content -->
-      <div class="lg:col-span-2">
-        <article class="prose prose-lg max-w-none">
-          <!-- Introduction - Domain-based unique content -->
-          <div class="mb-8 text-gray-900">
-            <h2 class="text-gray-900 text-3xl font-bold text-[#22223B] mb-4 ">
-              Access Free Government Phone in {cityName}
-            </h2>
-            <p class="text-gray-900 text-lg text-[#6B7280] leading-relaxed" set:html={variations.intro} />
+      </section>
+      {cities.length > 0 && (
+        <section class="py-12 bg-gray-50">
+          <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+              <h2 class="text-gray-900 text-3xl font-bold text-center mb-8">{variations.headingCities}</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {cities.map((city: any) => (
+                  <a href={getCitySubdomainURL(createCitySlug(city.name), stateAbbr!)} class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <h3 class="text-gray-900 font-semibold text-lg mb-2">{city.name}</h3>
+                    <p class="text-gray-900 text-sm">{city.population ? `${city.population.toLocaleString()} residents` : 'N/A'}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
+        </section>
+      )}
+      <RegionalStates currentState={stateData.abbreviation} currentStateName={stateData.name} />
+      <RelatedContent currentPage="state" currentState={stateData.abbreviation} />
+    </main>
+  </Layout>
+)}
 
-          <!-- City Information Section -->
-          {population && (
-            <div style={`background: linear-gradient(135deg, ${designDNA.colors.primary}15, ${designDNA.colors.secondary}15); border-color: ${designDNA.colors.primary}30;`} class="rounded-lg p-6 mb-8 border">
-              <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mb-4 ">About {cityName}, {stateAbbreviation}</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {population && (
-                  <div class="flex items-start">
-                    <svg class="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                    </svg>
-                    <div>
-                      <p class="text-gray-900 font-semibold text-[#22223B]">Population</p>
-                      <p class="text-gray-900 text-[#6B7280] text-sm">{population.toLocaleString()} residents</p>
+{renderType === 'city' && cityData && stateData && (
+  <Layout title={seoTitle} description={seoDescription} canonicalURL={canonicalURL}>
+    <main class="min-h-screen">
+      <section class="relative overflow-hidden text-white" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`}>
+        <div class="container mx-auto px-4 py-10 md:py-24 relative z-10">
+          <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-gray-900 text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">{cityH1}</h1>
+            <p class="text-gray-900 text-xl md:text-2xl mb-8 text-white max-w-3xl mx-auto">
+              Access free smartphone and monthly service through the Lifeline & ACP programs.
+              <span class="text-gray-900 font-semibold">No credit check, no hidden fees, instant approval.</span>
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+              <a href="/apply" class="btn-accent text-lg px-8 py-4 font-bold shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-300 inline-block text-center">Verify Eligibility Now</a>
+              <a href="/providers" class="btn-primary text-lg px-8 py-4 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 inline-block text-center">View Providers</a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <Breadcrumbs items={breadcrumbItems} />
+      <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div class="lg:col-span-2">
+            <article class="prose prose-lg max-w-none">
+              <div class="mb-8 text-gray-900">
+                <h2 class="text-gray-900 text-3xl font-bold text-[#22223B] mb-4">Access Free Government Phone in {cityName}</h2>
+                <p class="text-gray-900 text-lg text-[#6B7280] leading-relaxed" set:html={variations.intro} />
+              </div>
+              {population > 0 && (
+                <div style={`background: linear-gradient(135deg, ${designDNA.colors.primary}15, ${designDNA.colors.secondary}15); border-color: ${designDNA.colors.primary}30;`} class="rounded-lg p-6 mb-8 border">
+                  <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mb-4">About {cityName}, {stateAbbreviation}</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-start">
+                      <svg class="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                      </svg>
+                      <div>
+                        <p class="text-gray-900 font-semibold text-[#22223B]">Population</p>
+                        <p class="text-gray-900 text-[#6B7280] text-sm">{population.toLocaleString()} residents</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start">
+                      <svg class="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                      </svg>
+                      <div>
+                        <p class="text-gray-900 font-semibold text-[#22223B]">Location</p>
+                        <p class="text-gray-900 text-[#6B7280] text-sm">{cityName}, {stateAbbreviation}</p>
+                      </div>
                     </div>
                   </div>
-                )}
-                <div class="flex items-start">
-                  <svg class="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-                  </svg>
-                  <div>
-                    <p class="text-gray-900 font-semibold text-[#22223B]">Location</p>
-                    <p class="text-gray-900 text-[#6B7280] text-sm">{cityName}, {stateAbbreviation}</p>
-                  </div>
-                </div>
-              </div>
-              {cityFacts.length > 0 && (
-                <div style={`border-color: ${designDNA.colors.primary}40;`} class="mt-4 pt-4 border-t">
-                  <ul class="space-y-2 text-[#6B7280] text-sm">
-                    {cityFacts.map((fact) => (
-                      <li class="text-gray-900 flex items-start">
-                        <svg class="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                        <span set:html={fact} />
-                      </li>
-                    ))}
-                  </ul>
+                  {cityFacts.length > 0 && (
+                    <div style={`border-color: ${designDNA.colors.primary}40;`} class="mt-4 pt-4 border-t">
+                      <ul class="space-y-2 text-[#6B7280] text-sm">
+                        {cityFacts.map((fact) => (
+                          <li class="text-gray-900 flex items-start">
+                            <svg class="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span set:html={fact} />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </article>
+            </article>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Related Cities -->
-  <RelatedCities 
-    cities={relatedCities}
-    stateName={stateName}
-    stateAbbreviation={stateAbbreviation}
-    currentCityName={cityName}
-    maxCities={6}
-  />
-
-  <!-- Similar Cities -->
-  <SimilarCities 
-    currentCityName={cityName}
-    currentStateAbbr={stateAbbreviation}
-    currentPopulation={population}
-    similarCities={similarCities}
-  />
-
-  <!-- Related Content -->
-  <RelatedContent 
-    city={cityName}
-    state={stateName}
-  />
-</Layout>
-
+      <RelatedCities cities={relatedCities} stateName={stateName} stateAbbreviation={stateAbbreviation} currentCityName={cityName} maxCities={6} />
+      <RelatedContent city={cityName} state={stateName} />
+    </main>
+  </Layout>
+)}

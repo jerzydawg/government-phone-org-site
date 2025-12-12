@@ -3,6 +3,7 @@
   "siteName": "Government Phone",
   "keyword": "Free Government Phone",
   "ownerEmail": "smartguru6892@gmail.com",
+  "useSubdomains": false,
   "designStyle": "advanced",
   "designDNA": {
     "colors": {
