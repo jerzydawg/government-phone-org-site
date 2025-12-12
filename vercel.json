@@ -11,28 +11,6 @@
       "destination": "https://government-phone.org/:path*",
       "permanent": true
     },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?<state>[a-z]{2})\\.government-phone\\.org"
-        }
-      ],
-      "destination": "https://government-phone.org/:state/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?<city>[a-z0-9-]+)-(?<state>[a-z]{2})\\.government-phone\\.org"
-        }
-      ],
-      "destination": "https://government-phone.org/:state/:city/:path*",
-      "permanent": true
-    }
   ],
   "rewrites": [
     {
