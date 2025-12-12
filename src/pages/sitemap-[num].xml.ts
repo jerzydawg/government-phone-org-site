@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { supabase } from '../lib/supabase';
 import { getSiteURL, useSubdomains, getStateSubdomainURL } from '../lib/site-config';
-import { getCitiesForSitemap, generateCitySitemapXML } from '../lib/sitemap-utils';
+import { getCitiesForSitemap, generateCitySitemapXML, shuffleStates, shuffleStaticPages } from '../lib/sitemap-utils';
 
 const URLS_PER_SITEMAP = 10000;
 
@@ -13,8 +13,8 @@ export const GET: APIRoute = async ({ params }) => {
 
   // Handle sitemap-main.xml (static pages + state pages)
   if (num === 'main') {
-    // Static pages
-    const staticPages = [
+    // Static pages - shuffled per domain (homepage always first)
+    const staticPages = shuffleStaticPages([
       '',
       '/eligibility',
       '/programs',
@@ -29,7 +29,7 @@ export const GET: APIRoute = async ({ params }) => {
       '/emergency-broadband',
       '/free-government-phone-near-me',
       '/states',
-    ];
+    ]);
 
     // Fetch all states
     let states: Array<{ name: string; abbreviation: string }> = [];
@@ -44,6 +44,9 @@ export const GET: APIRoute = async ({ params }) => {
         console.error('Error fetching states for sitemap:', e);
       }
     }
+
+    // Shuffle states per domain for unique ordering
+    const shuffledStates = shuffleStates(states);
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -62,7 +65,7 @@ export const GET: APIRoute = async ({ params }) => {
 
     // Add state pages - use subdomain format if enabled (e.g., nj.free-government-phone.org)
     const useSubdomainMode = useSubdomains();
-    for (const state of states) {
+    for (const state of shuffledStates) {
       const stateUrl = useSubdomainMode 
         ? getStateSubdomainURL(state.abbreviation.toLowerCase())
         : `${SITE_URL}/${state.abbreviation.toLowerCase()}/`;
