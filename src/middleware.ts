@@ -1,6 +1,6 @@
 // Dynamic middleware that uses site config for domain validation
 // Allows Vercel previews and the configured production domain
-import { getDomain } from './lib/site-config';
+import { getDomain, useSubdomains } from './lib/site-config';
 
 export const onRequest = async (context: any, next: any) => {
   const url = new URL(context.request.url);
@@ -21,8 +21,28 @@ export const onRequest = async (context: any, next: any) => {
   const isWwwDomain = host === `www.${configuredDomain}`;
   const isSubdomain = host.endsWith(`.${configuredDomain}`) && !isWwwDomain;
 
+  // If subdomains are disabled but we're on a subdomain, redirect to path-based URL
+  if (!useSubdomains() && isSubdomain && !isPreviewHost) {
+    const subdomainPart = host.split('.')[0];
+    // Check if it's a 2-letter state abbreviation (e.g., "in", "nj", "ca")
+    if (subdomainPart.length === 2 && /^[a-z]{2}$/.test(subdomainPart)) {
+      // Redirect state subdomain to path-based URL: in.domain.com/ → domain.com/in/
+      const destination = `https://${configuredDomain}/${subdomainPart}${url.pathname}${url.search}`;
+      return context.redirect(destination, 301);
+    }
+    // Check if it's a city-state subdomain (e.g., "wayne-nj")
+    const parts = subdomainPart.split('-');
+    if (parts.length >= 2 && parts[parts.length - 1].length === 2) {
+      const stateAbbr = parts[parts.length - 1];
+      const citySlug = parts.slice(0, parts.length - 1).join('-');
+      // Redirect city subdomain to path-based URL: wayne-nj.domain.com/ → domain.com/nj/wayne/
+      const destination = `https://${configuredDomain}/${stateAbbr}/${citySlug}${url.pathname}${url.search}`;
+      return context.redirect(destination, 301);
+    }
+  }
+
   // Allow preview hosts and the configured domain
-  if (isPreviewHost || isExactDomain || isSubdomain) {
+  if (isPreviewHost || isExactDomain || (isSubdomain && useSubdomains())) {
     // Only redirect www to non-www if we're on the production domain
     if (isWwwDomain && !isPreviewHost) {
       const destination = `https://${configuredDomain}${url.pathname}${url.search}`;
