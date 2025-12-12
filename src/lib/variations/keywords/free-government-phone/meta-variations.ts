@@ -644,15 +644,24 @@ const ACP_DESCRIPTIONS = [
 // ============================================================================
 
 function ensureLengthOptimal(text: string, min: number, max: number, context?: string): string {
-  // If too long, truncate intelligently
+  // If too long, truncate intelligently at word boundary
   if (text.length > max) {
-    // Try to truncate at word boundary
+    // Always truncate at word boundary - find last space before max length
     const truncated = text.substring(0, max - 3);
     const lastSpace = truncated.lastIndexOf(' ');
-    if (lastSpace > max * 0.7) {
-      return truncated.substring(0, lastSpace) + '...';
+    // If we found a space and it's not too close to the start, use it
+    if (lastSpace > 0 && lastSpace > max * 0.5) {
+      return truncated.substring(0, lastSpace).trim() + '...';
     }
-    return truncated + '...';
+    // Fallback: if no good word boundary, truncate and add ellipsis
+    // But try to find any space in the last 20 chars to avoid mid-word cuts
+    const last20 = truncated.substring(Math.max(0, truncated.length - 20));
+    const spaceInLast20 = last20.lastIndexOf(' ');
+    if (spaceInLast20 > 0) {
+      const cutPoint = truncated.length - 20 + spaceInLast20;
+      return truncated.substring(0, cutPoint).trim() + '...';
+    }
+    return truncated.trim() + '...';
   }
   
   // If too short, pad intelligently

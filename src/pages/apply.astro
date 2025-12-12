@@ -117,7 +117,8 @@ const jsonLd = {
 };
 ---
 
-<Layout title={title} description={description}>
+const canonicalURL = `${siteURL}/apply/`;
+<Layout title={title} description={description} canonicalURL={canonicalURL}>
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
   
   <!-- Breadcrumb Navigation -->

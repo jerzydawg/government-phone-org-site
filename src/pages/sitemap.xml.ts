@@ -46,6 +46,7 @@ export const GET: APIRoute = async () => {
       const pageSize = 1000;
       let hasMore = true;
       let page = 0;
+      let totalFetched = 0;
       
       while (hasMore) {
         const { data, error } = await supabase
@@ -55,17 +56,30 @@ export const GET: APIRoute = async () => {
           .range(page * pageSize, (page + 1) * pageSize - 1);
         
         if (error) {
-          console.error('Error fetching cities page:', page, error);
-          break;
+          console.error(`[Sitemap] Error fetching cities page ${page}:`, error);
+          // Try to continue with next page, but log the error
+          page++;
+          // Safety check: if we've tried many pages and keep failing, break
+          if (page > 100) {
+            console.error('[Sitemap] Too many errors, stopping pagination');
+            break;
+          }
+          continue;
         }
         
         if (data && data.length > 0) {
           const pageCities = data.map((city: any) => ({
             name: city.name,
             state_abbr: city.states?.abbreviation || ''
-          })).filter((c: any) => c.state_abbr);
+          })).filter((c: any) => c.state_abbr && c.name);
           
           cities.push(...pageCities);
+          totalFetched += pageCities.length;
+          
+          // Log progress every 10 pages
+          if (page % 10 === 0) {
+            console.log(`[Sitemap] Fetched ${totalFetched} cities (page ${page})`);
+          }
           
           // If we got fewer than pageSize, we've reached the end
           if (data.length < pageSize) {
@@ -77,8 +91,10 @@ export const GET: APIRoute = async () => {
           hasMore = false;
         }
       }
+      
+      console.log(`[Sitemap] Total cities fetched: ${cities.length}`);
     } catch (e) {
-      console.error('Error fetching cities for sitemap:', e);
+      console.error('[Sitemap] Error fetching cities for sitemap:', e);
     }
   }
 
