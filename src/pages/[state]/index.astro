@@ -7,7 +7,7 @@ import { createCitySlug } from '../../lib/slug-utils.js';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import RegionalStates from '../../components/RegionalStates.astro';
 import RelatedContent from '../../components/RelatedContent.astro';
-import { getSiteURL, getDomain, getKeywordId, getSiteName, getDesignDNA } from '../../lib/site-config';
+import { getSiteURL, getDomain, getKeywordId, getSiteName, getDesignDNA, useSubdomains, getStateSubdomainURL } from '../../lib/site-config';
 import { getStateContentVariations } from '../../lib/state-content-variations';
 import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
 
@@ -319,7 +319,10 @@ if (!stateData) {
 
 // Get domain-based content variations for unique content across 1000+ sites
 const variations = getStateContentVariations(DOMAIN, stateData.name, stateData.abbreviation);
-const canonicalURL = `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`;
+// Use subdomain URL if subdomain mode is enabled, otherwise use path-based URL
+const canonicalURL = useSubdomains() 
+  ? getStateSubdomainURL(stateData.abbreviation.toLowerCase())
+  : `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`;
 ---
 
 <Layout

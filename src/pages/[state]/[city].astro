@@ -14,7 +14,7 @@ import {
   type CityData,
   type StateData
 } from '../../lib/city-content-variations';
-import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName } from '../../lib/site-config';
+import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName, useSubdomains, getCitySubdomainURL } from '../../lib/site-config';
 import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
 
 export const prerender = false;
@@ -265,7 +265,10 @@ if (getMetaVariations) {
 
 // Ensure canonical URL has trailing slash
 const citySlug = createCitySlug(cityName);
-const canonicalUrl = new URL(`/${stateAbbr.toLowerCase()}/${citySlug}/`, SITE_URL);
+// Use subdomain URL if subdomain mode is enabled, otherwise use path-based URL
+const canonicalUrl = useSubdomains() 
+  ? new URL(getCitySubdomainURL(citySlug, stateAbbr.toLowerCase()))
+  : new URL(`/${stateAbbr.toLowerCase()}/${citySlug}/`, SITE_URL);
 
 // Enhanced structured data with city-specific information
 const structuredData = {
