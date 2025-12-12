@@ -21,23 +21,48 @@ export const onRequest = async (context: any, next: any) => {
   const isWwwDomain = host === `www.${configuredDomain}`;
   const isSubdomain = host.endsWith(`.${configuredDomain}`) && !isWwwDomain;
 
-  // If subdomains are disabled but we're on a subdomain, redirect to path-based URL
-  if (!useSubdomains() && isSubdomain && !isPreviewHost) {
+  // If subdomains are enabled, validate subdomain format and strip paths
+  // Vercel rewrites will handle routing subdomains to city/state pages
+  if (useSubdomains() && isSubdomain) {
+    const subdomainInfo = parseSubdomain(host);
     const subdomainPart = host.split('.')[0];
-    // Check if it's a 2-letter state abbreviation (e.g., "in", "nj", "ca")
-    if (subdomainPart.length === 2 && /^[a-z]{2}$/.test(subdomainPart)) {
-      // Redirect state subdomain to path-based URL: in.domain.com/ → domain.com/in/
-      const destination = `https://${configuredDomain}/${subdomainPart}${url.pathname}${url.search}`;
-      return context.redirect(destination, 301);
+    
+    // Check if it's a state subdomain (2-letter abbreviation, e.g., "nj")
+    const isStateSubdomain = subdomainPart.length === 2 && /^[a-z]{2}$/.test(subdomainPart);
+    
+    // If it's a valid city subdomain or state subdomain, allow the request to proceed
+    // Vercel rewrites will route it to the correct page, and the page will render with subdomain canonical URL
+    if (subdomainInfo || isStateSubdomain) {
+      // Only redirect if there's an unexpected path (not the rewritten path from Vercel)
+      // Vercel rewrites subdomains to paths like /nj/wayne/, so we should allow those
+      // But if someone accesses wayne-nj.domain.com/some-other-path, redirect to root
+      const isRewrittenPath = url.pathname.match(/^\/([a-z]{2})\/?$/) || url.pathname.match(/^\/([a-z]{2})\/([a-z0-9-]+)\/?$/);
+      if (!isRewrittenPath && url.pathname !== '/') {
+        const subdomainRoot = `https://${host}/`;
+        return context.redirect(subdomainRoot, 301);
+      }
+      return next();
     }
-    // Check if it's a city-state subdomain (e.g., "wayne-nj")
-    const parts = subdomainPart.split('-');
-    if (parts.length >= 2 && parts[parts.length - 1].length === 2) {
-      const stateAbbr = parts[parts.length - 1];
-      const citySlug = parts.slice(0, parts.length - 1).join('-');
-      // Redirect city subdomain to path-based URL: wayne-nj.domain.com/ → domain.com/nj/wayne/
-      const destination = `https://${configuredDomain}/${stateAbbr}/${citySlug}${url.pathname}${url.search}`;
-      return context.redirect(destination, 301);
+    // Invalid subdomain - let route handler return 404
+  }
+
+  // If subdomains are enabled but we're accessing path-based URLs, redirect to subdomain format
+  if (useSubdomains() && isExactDomain && !isPreviewHost) {
+    // Check if this is a state page: /nj/ or /nj
+    const stateMatch = url.pathname.match(/^\/([a-z]{2})\/?$/);
+    if (stateMatch) {
+      const stateAbbr = stateMatch[1];
+      const subdomainUrl = `https://${stateAbbr}.${configuredDomain}/`;
+      return context.redirect(subdomainUrl, 301);
+    }
+    
+    // Check if this is a city page: /nj/wayne/ or /nj/wayne
+    const cityMatch = url.pathname.match(/^\/([a-z]{2})\/([a-z0-9-]+)\/?$/);
+    if (cityMatch) {
+      const stateAbbr = cityMatch[1];
+      const citySlug = cityMatch[2];
+      const subdomainUrl = `https://${citySlug}-${stateAbbr}.${configuredDomain}/`;
+      return context.redirect(subdomainUrl, 301);
     }
   }
 
