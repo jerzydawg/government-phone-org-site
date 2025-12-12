@@ -10,7 +10,7 @@
       ],
       "destination": "https://government-phone.org/:path*",
       "permanent": true
-    },
+    }
   ],
   "rewrites": [
     {

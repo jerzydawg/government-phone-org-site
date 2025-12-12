@@ -1,6 +1,6 @@
 // Dynamic middleware that uses site config for domain validation
 // Allows Vercel previews and the configured production domain
-import { getDomain, useSubdomains } from './lib/site-config';
+import { getDomain, useSubdomains, parseSubdomain } from './lib/site-config';
 
 export const onRequest = async (context: any, next: any) => {
   const url = new URL(context.request.url);
