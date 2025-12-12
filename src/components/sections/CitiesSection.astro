@@ -1,0 +1,89 @@
+---
+/**
+ * Popular Cities Section
+ * Shows top cities by population
+ */
+import { getDesignDNA, getSiteName, getKeyword, getDomain } from '../../lib/site-config';
+import { supabase } from '../../lib/supabase';
+import { createCitySlug } from '../../lib/slug-utils.js';
+import { getMostPopularCitiesText, getExploreAllStatesText } from '../../lib/microcopy-variations';
+
+const designDNA = getDesignDNA();
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const mostPopularCitiesText = getMostPopularCitiesText(domain);
+const exploreAllCitiesText = getExploreAllStatesText(domain);
+
+// Fetch top 20 cities by population
+let popularCities: Array<{name: string; population: number; state_abbr: string}> = [];
+if (supabase) {
+  try {
+    const { data, error } = await supabase
+      .from('cities')
+      .select('name, population, states(abbreviation)')
+      .order('population', { ascending: false })
+      .limit(20);
+    
+    if (error) {
+      console.error('Supabase query error:', error);
+    } else if (data) {
+      popularCities = data.map((city: any) => ({
+        name: city.name,
+        population: city.population,
+        state_abbr: city.states?.abbreviation || ''
+      })).filter((c: any) => c.state_abbr);
+    }
+  } catch (e) {
+    console.error('Failed to fetch popular cities:', e);
+    // Component will render with empty array, section won't display
+  }
+} else {
+  console.warn('Supabase client not initialized - cities section will be hidden');
+}
+---
+
+{popularCities.length > 0 && (
+  <section class="py-12 md:py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-8 md:mb-12">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4" style={`color: ${designDNA.colors.text};`}>
+          {mostPopularCitiesText}
+        </h2>
+        <p class="text-sm md:text-base max-w-2xl mx-auto px-4" style={`color: ${designDNA.colors.text};`}>
+          Residents in these cities are accessing {keyword.toLowerCase()} through {siteName}.
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {popularCities.map((city) => (
+          <a 
+            href={`/${city.state_abbr.toLowerCase()}/${createCitySlug(city.name)}/`}
+            class="group block bg-white rounded-xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200"
+            style={`--hover-border-color: ${designDNA.colors.primary};`}
+          >
+            <div class="flex items-center justify-between mb-2" style={`color: ${designDNA.colors.text};`}>
+              <h3 class="font-semibold group-hover:opacity-80 transition-colors truncate" style={`color: ${designDNA.colors.text};`}>
+                {city.name}
+              </h3>
+              <span class="text-xs font-bold px-2 py-1 rounded" style={`background-color: ${designDNA.colors.primary}20; color: ${designDNA.colors.primary};`}>
+                {city.state_abbr}
+              </span>
+            </div>
+            <p class="text-sm" style={`color: ${designDNA.colors.text};`}>
+              {city.population?.toLocaleString()} residents
+            </p>
+          </a>
+        ))}
+      </div>
+      
+      <div class="text-center mt-8">
+        <a href="/states/" class="font-semibold hover:opacity-80" style={`color: ${designDNA.colors.primary};`}>
+          {exploreAllCitiesText}
+        </a>
+      </div>
+    </div>
+  </section>
+)}
+
+

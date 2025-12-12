@@ -1,0 +1,181 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const pageTitle = `Free Government Phone - Lifeline Free Phone Program | ${siteName}`;
+const pageDescription = `Get your Free Government Phone through the Lifeline program. No cost smartphone, unlimited talk & text, free data. Check eligibility and apply today.`;
+const canonicalURL = `${siteURL}/lifeline-program`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "Complete Lifeline Free Phone Program Overview",
+      "description": "Detailed information about getting your free smartphone through the federal Lifeline assistance program",
+      "author": {
+        "@type": "Organization",
+        "name": siteName
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "mainEntityOfPage": canonicalURL
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I get to keep my phone number when switching to Lifeline?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, you can transfer your existing phone number to your new Lifeline service at no charge. The process is called number porting and typically takes 1-2 business days to complete."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What type of smartphone will I receive through Lifeline?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You'll receive a modern Android smartphone with 4G LTE capability, camera, internet access, and all standard smartphone features. The exact model varies by provider but meets current technology standards."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much data comes with my free Lifeline phone each month?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Most Lifeline providers offer at least 4.5GB of monthly high-speed data, unlimited talk and text. Some providers offer more data or additional features at no extra cost."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can seniors on Social Security get a free Lifeline phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, seniors receiving Social Security, SSI, or other federal benefits automatically qualify for a free Lifeline phone and service. Age alone doesn't determine eligibility - it's based on income or benefit participation."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "name": "Steps to Get Your Free Lifeline Phone",
+      "description": "Simple process to obtain your free government phone through Lifeline",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Review Your Qualification Status",
+          "text": "Confirm you meet income guidelines (at or below 135% of Federal Poverty Level) or participate in qualifying assistance programs like SNAP, Medicaid, or SSI."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Pick Your Service Provider",
+          "text": "Choose from approved Lifeline companies in your area. Compare their phone models, data allowances, and coverage areas before deciding."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Your Application",
+          "text": "Complete the enrollment process online or by phone with your chosen provider. Have your ID and qualifying documents ready for verification."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Wait for Approval and Phone Delivery",
+          "text": "Most applications get approved within 2-3 business days. Your free smartphone ships within 5-7 business days after approval, ready to activate."
+        }
+      ]
+    },
+    {
+      "@type": "GovernmentService",
+      "name": "Lifeline Assistance Program",
+      "description": "Federal program providing free smartphones and monthly service to low-income households",
+      "provider": {
+        "@type": "GovernmentOrganization",
+        "name": "Federal Communications Commission"
+      },
+      "serviceType": "Telecommunications Assistance",
+      "areaServed": "United States",
+      "audience": "Low-income households and benefit recipients"
+    }
+  ]
+};
+---
+
+<Layout 
+  title={pageTitle}
+  description={pageDescription}
+  canonicalURL={canonicalURL}
+  structuredData={jsonLd}
+>
+  <!-- Breadcrumb Navigation -->
+  <nav class="bg-gray-50 py-3 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <ol class="flex items-center space-x-2 text-sm">
+        <li><a href="/" class="text-[var(--color-primary)] hover:underline">Home</a></li>
+        <li class="text-gray-500">/</li>
+        <li class="text-gray-700 font-medium">Lifeline Program</li>
+      </ol>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Free Government Phone</h1>
+      <p class="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
+        Get your no-cost smartphone and monthly service through the federal Lifeline program. Includes unlimited talk, text, and high-speed data with no monthly bills.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <a href="/apply" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all">
+          CONFIRM ELIGIBILITY TODAY
+        </a>
+        <span class="text-gray-600 text-sm">✓ No credit check required</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- What is Lifeline Section -->
+    <section class="mb-12">
+      <h2 class="text-3xl font-bold text-gray-900 mb-6">Understanding the Lifeline Assistance Program</h2>
+      <div class="prose prose-lg max-w-none">
+        <p class="text-gray-700 leading-relaxed mb-4">
+          The Lifeline program helps millions of Americans stay connected by providing a <strong>Free Government Phone</strong> and monthly service at zero cost. This federal initiative ensures low-income households can access essential communication services for work, healthcare, and emergency situations.
+        </p>
+        <p class="text-gray-700 leading-relaxed mb-4">
+          Every month, qualified participants receive completely free wireless service including unlimited calling, texting, and several gigabytes of high-speed internet data. Government Phone providers deliver modern Android smartphones capable of running apps, browsing the web, and handling video calls.
+        </p>
+        <p class="text-gray-700 leading-relaxed">
+          Since 1985, this program has evolved from basic landline discounts to offering full smartphone service. Today's Lifeline benefits provide the same connectivity that working families need for job searching, medical appointments, and staying in touch with loved ones.
+        </p>
+      </div>
+    </section>
+
+    <!-- What You Get Section -->
+    <section class="mb-12">
+      <h2 class="text-3xl font-bold text-gray-900 mb-6">Your Complete Free Phone Package</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center mb-4" style="background-color: var(--color-primary)">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Brand New Smartphone</h3>
+          <p class="text-gray-600">Modern Android device with camera, GPS, Wi-Fi, and 4G LTE connectivity. No refurbished phones.</p>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center mb-4"

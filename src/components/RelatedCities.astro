@@ -1,0 +1,89 @@
+---
+import { getDomain, getDesignDNA } from '../lib/site-config';
+import { createCitySlug } from '../lib/slug-utils.js';
+import { getViewProgramsText } from '../lib/microcopy-variations';
+
+export interface Props {
+  cities: Array<{
+    name: string;
+    state_abbreviation: string;
+    population?: number;
+    id?: number;
+  }>;
+  stateName: string;
+  stateAbbreviation: string;
+  currentCityName?: string;
+  maxCities?: number;
+}
+
+const { cities, stateName, stateAbbreviation, currentCityName, maxCities = 6 } = Astro.props;
+const domain = getDomain();
+const designDNA = getDesignDNA();
+const viewProgramsText = getViewProgramsText(domain);
+
+// Safety check - if no cities provided, don't render anything
+if (!cities || cities.length === 0) {
+  return null;
+}
+
+// Filter out current city and limit to maxCities
+const relatedCities = cities
+  .filter(city => !currentCityName || city.name !== currentCityName)
+  .slice(0, maxCities)
+  .sort((a, b) => (b.population || 0) - (a.population || 0)); // Sort by population descending
+---
+
+<section class="py-12 bg-gradient-to-b from-gray-50 to-white">
+  <div class="container mx-auto px-4">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8 text-gray-900">
+        <h2 class="text-gray-900 text-3xl font-bold text-[#22223B] mb-2 ">
+          {currentCityName ? `Other Cities Near ${currentCityName}` : `Cities in ${stateName}`}
+        </h2>
+        <p class="text-gray-900 text-[#6B7280]">
+          Explore free government phone programs in nearby cities in {stateName}
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 text-gray-900">
+        {relatedCities.map((city) => (
+          <a 
+            href={`/${city.state_abbreviation.toLowerCase()}/${createCitySlug(city.name)}/`}
+            class="block p-6 bg-white rounded-lg hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-[var(--color-primary)] group"
+            aria-label={`View free government phone programs in ${city.name}, ${stateAbbreviation}`}
+          >
+            <div class="flex items-start justify-between mb-3 text-gray-900">
+              <h3 class="text-gray-900 font-bold text-lg text-[#22223B] group-hover:text-[#3F51B5] transition-colors">
+                {city.name}
+              </h3>
+              <svg class="w-5 h-5 text-gray-900 group-hover:text-[#3F51B5] transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            {city.population && (
+              <p class="text-gray-900 text-[#6B7280] text-sm mb-2 ">
+                <span class="text-gray-900 font-medium ">{city.population.toLocaleString()}</span> residents
+              </p>
+            )}
+            <p class="text-gray-900 text-[#3F51B5] text-sm font-medium mt-3">
+              {viewProgramsText}
+            </p>
+          </a>
+        ))}
+      </div>
+      
+      <!-- View All Cities CTA -->
+      <div class="text-center">
+        <a 
+          href={`/${stateAbbreviation.toLowerCase()}/`}
+          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
+        >
+          View All Cities in {stateName}
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section> 

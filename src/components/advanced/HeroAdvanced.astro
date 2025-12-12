@@ -1,0 +1,256 @@
+---
+/**
+ * Advanced Hero - Completely Different Design
+ * Dark theme with vibrant accents, completely different from basic
+ */
+import { getSiteName, getKeyword, getDesignDNA, getDomain } from '../../lib/site-config';
+import { getContentVariations, getCTASectionVariations } from '../../lib/city-content-variations';
+import { getLearnMoreText } from '../../lib/microcopy-variations';
+import { getCTAVariation } from '../../lib/variations/shared/cta-variations';
+
+interface Props {
+  customH1?: string;
+}
+const { customH1 } = Astro.props;
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const content = getContentVariations(domain);
+const ctaSection = getCTASectionVariations(domain, keyword);
+const learnMoreText = getLearnMoreText(domain);
+const h1Text = customH1 || keyword;
+
+// Generate a unique layout variant based on domain
+function hashDomain(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+
+const layoutVariant = hashDomain(domain) % 4; // 0-3 for different layouts
+---
+
+<section class="relative min-h-screen bg-slate-900 overflow-hidden">
+  <!-- Animated Background Pattern -->
+  <div class="absolute inset-0">
+    <div class="absolute inset-0 opacity-30" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}40 0%, transparent 50%), linear-gradient(225deg, ${designDNA.colors.accent}30 0%, transparent 50%);`}></div>
+    
+    <!-- Grid Pattern -->
+    <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
+    
+    <!-- Glowing Orbs -->
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse" style={`background: ${designDNA.colors.primary}30;`}></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl animate-pulse" style={`background: ${designDNA.colors.accent}25; animation-delay: 1s;`}></div>
+  </div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-screen flex items-center">
+    {layoutVariant === 0 ? (
+      <!-- Layout 1: Centered with large text -->
+      <div class="w-full text-center">
+        <div class="inline-block px-6 py-3 rounded-full text-sm font-bold mb-8 animate-bounce" style={`background: ${designDNA.colors.accent}; color: white;`}>
+          ⚡ {content.heroTagline}
+        </div>
+        
+        <h1 class="text-gray-900 text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-none tracking-tight text-white">
+          {h1Text}
+        </h1>
+        
+        <p class="text-gray-900 text-xl md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto">
+          {content.heroSubtext}
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+          <a href="/apply" class="group px-10 py-5 text-xl font-bold rounded-2xl transform hover:scale-105 transition-all shadow-2xl" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.accent}); color: white;`}>
+            {getCTAVariation(domain, 'hero')}
+            <span class="text-gray-900 inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+          <a href="/eligibility" class="px-10 py-5 text-xl font-bold rounded-2xl border-2 text-white hover:bg-white/10 transition-all" style={`border-color: ${designDNA.colors.primary};`}>
+            {learnMoreText}
+          </a>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+          <div class="text-center">
+            <div class="text-4xl md:text-5xl font-black mb-2" style={`color: ${designDNA.colors.primary};`}>{content.heroStats.stat1.value}</div>
+            <div class="text-slate-500 text-sm uppercase tracking-wider">{content.heroStats.stat1.label}</div>
+          </div>
+          <div class="text-center border-x border-slate-700">
+            <div class="text-4xl md:text-5xl font-black mb-2" style={`color: ${designDNA.colors.accent};`}>{content.heroStats.stat2.value}</div>
+            <div class="text-slate-500 text-sm uppercase tracking-wider">{content.heroStats.stat2.label}</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl md:text-5xl font-black mb-2" style={`color: ${designDNA.colors.secondary};`}>{content.heroStats.stat3.value}</div>
+            <div class="text-slate-500 text-sm uppercase tracking-wider">{content.heroStats.stat3.label}</div>
+          </div>
+        </div>
+      </div>
+    ) : layoutVariant === 1 ? (
+      <!-- Layout 2: Left-aligned with right image area -->
+      <div class="grid lg:grid-cols-2 gap-16 items-center w-full">
+        <div>
+          <span class="text-gray-900 inline-block px-4 py-2 rounded-lg text-sm font-bold mb-6" style={`background: ${designDNA.colors.primary}20; color: ${designDNA.colors.primary};`}>
+            {content.trustBadges[0]}
+          </span>
+          
+          <h1 class="text-gray-900 text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+            {h1Text}
+          </h1>
+          
+          <div class="w-24 h-2 rounded-full mb-6" style={`background: linear-gradient(90deg, ${designDNA.colors.primary}, ${designDNA.colors.accent});`}></div>
+          
+          <p class="text-gray-900 text-xl text-slate-600 mb-8 ">
+            {content.heroTagline}. {content.heroSubtext}
+          </p>
+          
+          <div class="flex flex-wrap gap-4 mb-8 text-gray-900">
+            <a href="/apply" class="px-8 py-4 text-lg font-bold rounded-xl text-white transform hover:scale-105 transition-all" style={`background: ${designDNA.colors.primary};`}>
+              {getCTAVariation(domain, 'hero-secondary')}
+            </a>
+            <a href="/eligibility" class="px-8 py-4 text-lg font-bold rounded-xl text-white border-2 hover:bg-white/10 transition-all" style={`border-color: ${designDNA.colors.accent};`}>
+              {ctaSection.tertiaryButton}
+            </a>
+          </div>
+          
+          <div class="flex gap-6 text-sm text-slate-500">
+            <span>✓ {content.trustBadges[1]}</span>
+            <span>✓ {content.trustBadges[2]}</span>
+          </div>
+        </div>
+        
+        <!-- Right side: Feature cards -->
+        <div class="space-y-6">
+          <div class="p-6 rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm hover:border-slate-600 transition-all">
+            <div class="text-4xl mb-4 text-gray-900">{content.icons.phone}</div>
+            <h3 class="text-gray-900 text-xl font-bold text-white mb-2 ">{content.featureTitles.freePhone}</h3>
+            <p class="text-slate-500">{content.valueProps[0]}</p>
+          </div>
+          <div class="p-6 rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm hover:border-slate-600 transition-all">
+            <div class="text-4xl mb-4 text-gray-900">{content.icons.speed}</div>
+            <h3 class="text-gray-900 text-xl font-bold text-white mb-2 ">{content.featureTitles.approval}</h3>
+            <p class="text-slate-500">{content.valueProps[1]}</p>
+          </div>
+          <div class="p-6 rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm hover:border-slate-600 transition-all">
+            <div class="text-4xl mb-4 text-gray-900">{content.icons.support}</div>
+            <h3 class="text-gray-900 text-xl font-bold text-white mb-2 ">{content.featureTitles.connectivity}</h3>
+            <p class="text-slate-500">{content.valueProps[2]}</p>
+          </div>
+        </div>
+      </div>
+    ) : layoutVariant === 2 ? (
+      <!-- Layout 3: Split diagonal -->
+      <div class="w-full">
+        <div class="grid lg:grid-cols-5 gap-12 items-center">
+          <div class="lg:col-span-3">
+            <div class="relative">
+              <div class="absolute -left-4 top-0 w-1 h-full rounded-full" style={`background: linear-gradient(180deg, ${designDNA.colors.primary}, ${designDNA.colors.accent});`}></div>
+              
+              <span class="text-gray-900 text-sm font-bold uppercase tracking-widest mb-4 block" style={`color: ${designDNA.colors.accent};`}>
+                {siteName}
+              </span>
+              
+              <h1 class="text-gray-900 text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+                {h1Text}
+              </h1>
+              
+              <p class="text-gray-900 text-lg text-slate-500 mb-8 max-w-lg">
+                {content.heroTagline}. {content.heroSubtext}
+              </p>
+              
+              <div class="flex flex-wrap gap-4">
+                <a href="/apply" class="px-8 py-4 text-lg font-bold rounded-full text-white shadow-lg transform hover:scale-105 transition-all" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`}>
+                  {getCTAVariation(domain, 'hero-alt')} →
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="lg:col-span-2">
+            <div class="relative">
+              <div class="absolute inset-0 rounded-3xl transform rotate-3" style={`background: ${designDNA.colors.primary}20;`}></div>
+              <div class="relative bg-slate-800 rounded-3xl p-6 border border-slate-700">
+                <div class="space-y-6">
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={`background: ${designDNA.colors.primary}20;`}>{content.icons.phone}</div>
+                    <div>
+                      <div class="text-2xl font-bold text-white">{content.heroStats.stat1.value}</div>
+                      <div class="text-sm text-slate-500">{content.heroStats.stat1.label}</div>
+                    </div>
+                  </div>
+                  <div class="h-px bg-slate-700"></div>
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={`background: ${designDNA.colors.accent}20;`}>{content.icons.money}</div>
+                    <div>
+                      <div class="text-2xl font-bold text-white">{content.heroStats.stat2.value}</div>
+                      <div class="text-sm text-slate-500">{content.heroStats.stat2.label}</div>
+                    </div>
+                  </div>
+                  <div class="h-px bg-slate-700"></div>
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={`background: ${designDNA.colors.secondary}20;`}>{content.icons.speed}</div>
+                    <div>
+                      <div class="text-2xl font-bold text-white">{content.heroStats.stat3.value}</div>
+                      <div class="text-sm text-slate-500">{content.heroStats.stat3.label}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <!-- Layout 4: Full-width banner style -->
+      <div class="w-full">
+        <div class="text-center mb-16">
+          <div class="inline-flex items-center gap-2 px-6 py-3 rounded-full mb-8" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}30, ${designDNA.colors.accent}30); border: 1px solid ${designDNA.colors.primary}50;`}>
+            <span class="text-gray-900 w-2 h-2 rounded-full animate-ping" style={`background: ${designDNA.colors.accent};`}></span>
+            <span class="text-white font-semibold">{content.heroTagline}</span>
+          </div>
+          
+          <h1 class="text-gray-900 text-5xl md:text-7xl font-black mb-6 text-white">
+            {h1Text}
+          </h1>
+          
+          <p class="text-gray-900 text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
+            {content.heroSubtext}
+          </p>
+          
+          <a href="/apply" class="inline-block px-12 py-5 text-xl font-bold rounded-2xl text-white transform hover:scale-105 transition-all shadow-2xl" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.accent});`}>
+            {getCTAVariation(domain, 'hero-footer')}
+          </a>
+        </div>
+        
+        <!-- Feature Grid -->
+        <div class="grid md:grid-cols-4 gap-6">
+          <div class="p-6 rounded-2xl bg-slate-800/50 border border-slate-700 text-center hover:border-slate-500 transition-all">
+            <div class="text-4xl mb-4 text-gray-900">{content.icons.phone}</div>
+            <div class="text-2xl font-bold text-white mb-1">{content.heroStats.stat1.value}</div>
+            <div class="text-slate-500 text-sm">{content.heroStats.stat1.label}</div>
+          </div>
+          <div class="p-6 rounded-2xl bg-slate-800/50 border border-slate-700 text-center hover:border-slate-500 transition-all">
+            <div class="text-4xl mb-4 text-gray-900">{content.icons.money}</div>
+            <div class="text-2xl font-bold text-white mb-1">{content.heroStats.stat2.value}</div>
+            <div class="text-slate-500 text-sm">{content.heroStats.stat2.label}</div>
+          </div>
+          <div class="p-6 rounded-2xl bg-slate-800/50 border border-slate-700 text-center hover:border-slate-500 transition-all">
+            <div class="text-4xl mb-4 text-gray-900">{content.icons.speed}</div>
+            <div class="text-2xl font-bold text-white mb-1">{content.heroStats.stat3.value}</div>
+            <div class="text-slate-500 text-sm">{content.heroStats.stat3.label}</div>
+          </div>
+          <div class="p-6 rounded-2xl bg-slate-800/50 border border-slate-700 text-center hover:border-slate-500 transition-all">
+            <div class="text-4xl mb-4 text-gray-900">{content.icons.support}</div>
+            <div class="text-2xl font-bold text-white mb-1">{content.trustBadges[2]}</div>
+            <div class="text-slate-500 text-sm">Always Available</div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+</section>
+

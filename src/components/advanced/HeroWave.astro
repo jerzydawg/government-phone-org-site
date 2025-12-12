@@ -1,0 +1,102 @@
+---
+/**
+ * Advanced Hero - Wave Variant
+ * Flowing wave design with animated elements
+ */
+import { getSiteName, getKeyword, getDesignDNA, getDomain } from '../../lib/site-config';
+import { getContentVariations, getCTASectionVariations } from '../../lib/city-content-variations';
+import { getCTAVariation } from '../../lib/variations/shared/cta-variations';
+
+interface Props {
+  customH1?: string;
+}
+const { customH1 } = Astro.props;
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const content = getContentVariations(domain);
+const ctaSection = getCTASectionVariations(domain, keyword);
+const h1Text = customH1 || keyword;
+---
+
+<section class="relative overflow-hidden" style={`background: ${designDNA.colors.background};`}>
+  <!-- Wave Background -->
+  <div class="absolute inset-0">
+    <svg class="absolute bottom-0 w-full" viewBox="0 0 1440 400" preserveAspectRatio="none">
+      <path fill={designDNA.colors.primary + '10'} d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,213.3C960,224,1056,192,1152,165.3C1248,139,1344,117,1392,106.7L1440,96L1440,400L1392,400C1344,400,1248,400,1152,400C1056,400,960,400,864,400C768,400,672,400,576,400C480,400,384,400,288,400C192,400,96,400,48,400L0,400Z"></path>
+      <path fill={designDNA.colors.primary + '08'} d="M0,256L48,261.3C96,267,192,277,288,272C384,267,480,245,576,234.7C672,224,768,224,864,234.7C960,245,1056,267,1152,261.3C1248,256,1344,224,1392,208L1440,192L1440,400L1392,400C1344,400,1248,400,1152,400C1056,400,960,400,864,400C768,400,672,400,576,400C480,400,384,400,288,400C192,400,96,400,48,400L0,400Z"></path>
+    </svg>
+  </div>
+  
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+    <div class="text-center max-w-4xl mx-auto">
+      <!-- Floating Badge -->
+      <div class="inline-flex items-center px-6 py-3 rounded-full text-sm font-semibold mb-8 shadow-lg" style={`background: ${designDNA.gradients.primary}; color: ${designDNA.colors.textOnPrimary};`}>
+        <span class="w-2 h-2 bg-white rounded-full mr-3 animate-pulse" style={`color: ${designDNA.colors.text};`}></span>
+        {content.trustBadges[0]} • {content.trustBadges[1]}
+      </div>
+      
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight" style={`color: ${designDNA.colors.text}; font-family: var(--font-heading);`}>
+        <span class="block" style={`color: ${designDNA.colors.text};`}>{h1Text}</span>
+      </h1>
+      
+      <p class="text-xl md:text-2xl mb-10 leading-relaxed max-w-2xl mx-auto" style={`color: ${designDNA.colors.text}80;`}>
+        {content.heroTagline} {content.heroSubtext}
+      </p>
+      
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-3 gap-4 md:gap-6 mb-10 max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg" style={`border: 1px solid ${designDNA.colors.primary}20;`}>
+          <div class="text-2xl md:text-4xl font-bold mb-1" style={`color: ${designDNA.colors.primary};`}>{content.heroStats.stat1.value}</div>
+          <div class="text-xs md:text-sm" style={`color: ${designDNA.colors.text}60;`}>{content.heroStats.stat1.label}</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg" style={`border: 1px solid ${designDNA.colors.accent}20;`}>
+          <div class="text-2xl md:text-4xl font-bold mb-1" style={`color: ${designDNA.colors.accent};`}>{content.heroStats.stat2.value}</div>
+          <div class="text-xs md:text-sm" style={`color: ${designDNA.colors.text}60;`}>{content.heroStats.stat2.label}</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg" style={`border: 1px solid ${designDNA.colors.secondary}20;`}>
+          <div class="text-2xl md:text-4xl font-bold mb-1" style={`color: ${designDNA.colors.secondary};`}>{content.heroStats.stat3.value}</div>
+          <div class="text-xs md:text-sm" style={`color: ${designDNA.colors.text}60;`}>{content.heroStats.stat3.label}</div>
+        </div>
+      </div>
+      
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+        <a href="/apply" class="inline-flex items-center justify-center px-10 py-5 text-lg font-bold rounded-2xl shadow-xl transform hover:scale-105 transition-all" style={`background: ${designDNA.gradients.primary}; color: ${designDNA.colors.textOnPrimary};`}>
+          {getCTAVariation(domain, "hero")}
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </a>
+        <a href="/eligibility" class="inline-flex items-center justify-center px-10 py-5 text-lg font-bold rounded-2xl border-2 transition-all hover:shadow-lg" style={`border-color: ${designDNA.colors.primary}; color: ${designDNA.colors.primary}; background: white;`}>
+          {ctaSection.tertiaryButton}
+        </a>
+      </div>
+      
+      <!-- Trust Row -->
+      <div class="flex flex-wrap items-center justify-center gap-6 text-sm" style={`color: ${designDNA.colors.text}60;`}>
+        <span class="flex items-center gap-2" style={`color: ${designDNA.colors.text};`}>
+          <svg class="w-5 h-5" style={`color: ${designDNA.colors.primary};`} fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          {content.trustBadges[2]}
+        </span>
+        <span class="flex items-center gap-2" style={`color: ${designDNA.colors.text};`}>
+          <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          {content.valueProps[0]}
+        </span>
+        <span class="flex items-center gap-2" style={`color: ${designDNA.colors.text};`}>
+          <svg class="w-5 h-5" style={`color: ${designDNA.colors.secondary};`} fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+          </svg>
+          {content.valueProps[1]}
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+

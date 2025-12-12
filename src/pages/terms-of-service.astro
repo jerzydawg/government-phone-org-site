@@ -1,0 +1,123 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import RelatedContent from '../components/RelatedContent.astro';
+import { getSiteName, getDomain, getOwnerEmail, getSiteURL } from '../lib/site-config';
+import { generateTermsOfService } from '../lib/legal-content-generator';
+
+const siteName = getSiteName();
+const domain = getDomain();
+const ownerEmail = getOwnerEmail();
+const siteURL = getSiteURL();
+const canonicalURL = `${siteURL}/terms-of-service/`;
+
+// Structured Data
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": `Terms of Service - ${siteName}`,
+  "description": `Terms of Service for ${siteName}. Read our terms and conditions for using our website.`,
+  "url": canonicalURL,
+  "publisher": {
+    "@type": "Organization",
+    "name": siteName,
+    "url": siteURL
+  }
+};
+
+// Generate unique terms of service for this domain
+const termsContent = generateTermsOfService({
+  domain,
+  siteName,
+  ownerEmail
+});
+
+// Convert markdown to HTML (simple conversion)
+const htmlContent = termsContent
+  .replace(/^# (.+)$/gm, '<h1 class="text-gray-900 text-4xl font-bold mb-6 text-slate-900">$1</h1>')
+  .replace(/^## (.+)$/gm, '<h2 class="text-gray-900 text-2xl font-bold mt-8 mb-4 text-slate-800">$2</h2>')
+  .replace(/^### (.+)$/gm, '<h3 class="text-gray-900 text-xl font-semibold mt-6 mb-3 text-slate-700">$3</h3>')
+  .replace(/^\*\*(.+)\*\*$/gm, '<p class="text-gray-900 font-bold text-slate-900 mt-4">$1</p>')
+  .replace(/^\*(.+)$/gm, '<p class="text-gray-900 italic text-slate-600 mt-2">$1</p>')
+  .replace(/^- (.+)$/gm, '<li class="text-gray-900 ml-6 mb-2 ">$1</li>')
+  .replace(/\n\n/g, '</p><p class="text-gray-900 mb-4 text-slate-700 leading-relaxed">')
+  .replace(/^([^<\n].+)$/gm, '<p class="text-gray-900 mb-4 text-slate-700 leading-relaxed">$1</p>')
+  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  .replace(/---\n\n/g, '<hr class="my-8 border-slate-300" />');
+---
+
+<Layout title={`Terms of Service - ${siteName}`} description={`Terms of Service for ${siteName}. Read our terms and conditions for using our website.`} canonicalURL={canonicalURL}>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Breadcrumbs -->
+      <Breadcrumbs items={[
+        { label: 'Home', href: '/' },
+        { label: 'Terms of Service' }
+      ]} />
+
+      <!-- Content Card -->
+      <article class="bg-white rounded-2xl shadow-lg p-6 md:p-12">
+        <div class="prose prose-slate max-w-none legal-content">
+          <Fragment set:html={htmlContent} />
+        </div>
+        
+        <!-- Internal Links Section -->
+        <div class="mt-8 pt-8 border-t border-slate-200">
+          <h2 class="text-gray-900 text-2xl font-bold mb-4">Related Pages</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            <a href="/" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">← Back to Home</a>
+            <a href="/privacy-policy" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Privacy Policy →</a>
+            <a href="/eligibility" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Check Eligibility</a>
+            <a href="/programs" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Government Programs</a>
+            <a href="/providers" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Find Providers</a>
+            <a href="/faq" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">Frequently Asked Questions</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Related Content -->
+      <RelatedContent currentPage="home" />
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .legal-content h1 {
+    @apply text-4xl font-bold mb-6 text-slate-900;
+  }
+  
+  .legal-content h2 {
+    @apply text-2xl font-bold mt-8 mb-4 text-slate-800;
+  }
+  
+  .legal-content h3 {
+    @apply text-xl font-semibold mt-6 mb-3 text-slate-700;
+  }
+  
+  .legal-content p {
+    @apply mb-4 text-slate-700 leading-relaxed;
+  }
+  
+  .legal-content ul, .legal-content ol {
+    @apply mb-4 ml-6;
+  }
+  
+  .legal-content li {
+    @apply mb-2 text-slate-700;
+  }
+  
+  .legal-content strong {
+    @apply font-semibold text-slate-900;
+  }
+  
+  .legal-content hr {
+    @apply my-8 border-slate-300;
+  }
+  
+  .legal-content a {
+    @apply text-blue-600 hover:text-blue-800 underline;
+  }
+</style>
+
+

@@ -1,0 +1,48 @@
+---
+/**
+ * Centered Logo Navbar - Logo in center, nav split on both sides
+ * Modern, balanced layout for brand-focused sites
+ */
+import { getDesignDNA, getDomain } from '../../lib/site-config';
+import { getNavVariations } from '../../lib/city-content-variations';
+import TextLogo from '../TextLogo.astro';
+import { getEligibilityNavText, getGetStartedCTAText } from '../../lib/microcopy-variations';
+
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const navContent = getNavVariations(domain);
+---
+
+<nav class="bg-white shadow-lg sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-20">
+      <!-- Left Navigation -->
+      <div class="hidden md:flex items-center space-x-6">
+        <a href="/" class="nav-link font-medium transition-colors duration-200" style={`color: ${designDNA.colors.text};`}>Home</a>
+        <a href="/apply" class="nav-link font-medium transition-colors duration-200" style={`color: ${designDNA.colors.text};`}>Programs</a>
+        <a href="/eligibility" class="nav-link font-medium transition-colors duration-200" style={`color: ${designDNA.colors.text};`}>{getEligibilityNavText(domain)}</a>
+      </div>
+
+      <!-- Centered Logo -->
+      <div class="flex items-center justify-center">
+        <TextLogo size="lg" variant="gradient" />
+      </div>
+
+      <!-- Right Navigation & CTA -->
+      <div class="hidden md:flex items-center space-x-6">
+        <a href="/providers" class="nav-link font-medium transition-colors duration-200" style={`color: ${designDNA.colors.text};`}>Providers</a>
+        <a href="/faq" class="nav-link font-medium transition-colors duration-200" style={`color: ${designDNA.colors.text};`}>FAQ</a>
+        <a href="/apply" class="no-underline font-bold py-2 px-5 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200" style={`background: ${designDNA.colors.accent}; color: ${designDNA.colors.textOnPrimary || '#fff'};`}>
+          {navContent.ctaButton}
+        </a>
+      </div>
+
+      <!-- Mobile menu button -->
+      <button class="md:hidden p-2 rounded-lg hover:bg-gray-100" aria-label="Menu">
+        <svg class="w-6 h-6" style={`color: ${designDNA.colors.text};`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</nav>

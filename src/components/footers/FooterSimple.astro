@@ -1,0 +1,70 @@
+---
+/**
+ * Simple Footer - Clean, minimal footer with CTA
+ * Current default style
+ */
+import { getSiteName, getKeyword, getDomain, getSiteURL, getDesignDNA } from '../../lib/site-config';
+import { getContentVariations, getFooterVariations } from '../../lib/city-content-variations';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+const designDNA = getDesignDNA();
+const content = getContentVariations(domain);
+const footerContent = getFooterVariations(domain, keyword);
+
+const keywordLower = keyword.toLowerCase();
+const keywordDisplay = keywordLower.startsWith('my ') || keywordLower.startsWith('your ') || keywordLower.startsWith('a ') || keywordLower.startsWith('the ')
+  ? keyword
+  : `Your ${keyword}`;
+---
+
+<footer class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+    <!-- CTA Section -->
+    <div class="rounded-2xl p-6 md:p-10 mb-8 relative overflow-hidden" style={`background: linear-gradient(135deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.secondary} 100%);`}>
+      <div class="absolute inset-0 bg-black/10"></div>
+      <div class="relative z-10">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-6">
+          <div class="text-center lg:text-left flex-1">
+            <h2 class="text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-white" style={`color: ${designDNA.colors.text};`}>
+              {footerContent.ctaHeadline}
+            </h2>
+            <p class="text-white/90 text-sm md:text-base leading-relaxed max-w-xl mx-auto lg:mx-0">
+              {content.footerTagline}
+            </p>
+          </div>
+          
+          <div class="text-center lg:text-right flex-shrink-0">
+            <a href="/apply" class="no-underline inline-block w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-900 font-bold py-4 px-8 rounded-xl shadow-xl transform hover:scale-105 transition-all duration-200">
+              <span class="text-base md:text-lg">{content.ctaButton}</span>
+            </a>
+            
+            <div class="flex items-center justify-center lg:justify-end flex-wrap gap-2 mt-4 text-xs text-white">
+              <span>{content.trustBadges[0]}</span>
+              <span class="hidden sm:inline" style={`color: ${designDNA.colors.text};`}>•</span>
+              <span>{content.trustBadges[1]}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="mb-6" style={`color: ${designDNA.colors.text};`}>
+      <p class="text-slate-500 text-xs text-center max-w-4xl mx-auto">
+        {footerContent.disclaimer}
+      </p>
+    </div>
+
+    <!-- Copyright -->
+    <div class="border-t border-slate-700 pt-6">
+      <p class="text-slate-500 text-xs md:text-sm text-center">
+        {footerContent.copyright}
+      </p>
+    </div>
+  </div>
+</footer>
+
+

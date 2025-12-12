@@ -1,0 +1,35 @@
+---
+/**
+ * Footer Selector Component
+ * Dynamically selects footer variant based on Design DNA configuration
+ * 
+ * Variants:
+ *   - simple (default) -> FooterSimple
+ *   - mega -> FooterMega
+ *   - minimal -> FooterMinimal
+ *   - centered -> FooterCentered
+ */
+import { getDesignDNA } from '../lib/site-config';
+
+// Import all footer variants
+import FooterSimple from './footers/FooterSimple.astro';
+import FooterMega from './footers/FooterMega.astro';
+import FooterMinimal from './footers/FooterMinimal.astro';
+import FooterCentered from './footers/FooterCentered.astro';
+
+const designDNA = getDesignDNA();
+
+// Get footer style from advancedLayout, default to 'simple'
+const footerStyle = designDNA.advancedLayout?.footerStyle || 'simple';
+---
+
+{footerStyle === 'simple' && <FooterSimple />}
+{footerStyle === 'mega' && <FooterMega />}
+{footerStyle === 'minimal' && <FooterMinimal />}
+{footerStyle === 'centered' && <FooterCentered />}
+
+
+
+
+
+

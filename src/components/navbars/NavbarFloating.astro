@@ -1,0 +1,42 @@
+---
+/**
+ * Floating Navbar - Detached from top with rounded corners
+ * Modern, premium look with shadow and backdrop blur
+ */
+import { getDesignDNA } from '../../lib/site-config';
+import TextLogo from '../TextLogo.astro';
+import { getEligibilityNavText, getGetStartedCTAText } from '../../lib/microcopy-variations';
+
+const designDNA = getDesignDNA();
+---
+
+<div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-5xl px-4">
+  <nav class="bg-white/90 backdrop-blur-md shadow-xl rounded-2xl border border-gray-200/50">
+    <div class="px-6 py-3">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <TextLogo size="sm" variant="gradient" />
+
+        <!-- Navigation -->
+        <div class="hidden md:flex items-center space-x-6">
+          <a href="/" class="hover: font-medium transition-colors" style={`color: ${designDNA.colors.text};`}>Home</a>
+          <a href="/eligibility" class="hover: font-medium transition-colors" style={`color: ${designDNA.colors.text};`}>{getEligibilityNavText(domain)}</a>
+          <a href="/providers" class="hover: font-medium transition-colors" style={`color: ${designDNA.colors.text};`}>Providers</a>
+          <a href="/faq" class="hover: font-medium transition-colors" style={`color: ${designDNA.colors.text};`}>FAQ</a>
+        </div>
+
+        <!-- CTA -->
+        <a href="/apply" class="no-underline font-bold py-2.5 px-5 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200" style={`background: linear-gradient(135deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.accent} 100%); color: white;`}>
+          Apply Free
+        </a>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<!-- Spacer for floating nav -->
+<div class="h-24"></div>
+
+
+
+

@@ -1,0 +1,119 @@
+---
+/**
+ * Advanced Hero - Split Left Variant
+ * Content on left, visual element on right
+ */
+import { getSiteName, getKeyword, getDesignDNA, getDomain } from '../../lib/site-config';
+import { getContentVariations, getCTASectionVariations } from '../../lib/city-content-variations';
+import { getCTAVariation } from '../../lib/variations/shared/cta-variations';
+
+interface Props {
+  customH1?: string;
+}
+const { customH1 } = Astro.props;
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const content = getContentVariations(domain);
+const ctaSection = getCTASectionVariations(domain, keyword);
+const adv = designDNA.advancedLayout;
+const h1Text = customH1 || keyword;
+---
+
+<section class="relative min-h-[90vh] flex items-center" style={`background: ${designDNA.colors.background};`}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <!-- Left Content -->
+      <div class="order-2 lg:order-1">
+        <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold mb-6" style={`background: ${designDNA.colors.primary}15; color: ${designDNA.colors.primary};`}>
+          {content.trustBadges[0]}
+        </div>
+        
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={`color: ${designDNA.colors.text}; font-family: var(--font-heading);`}>
+          {h1Text}
+        </h1>
+        
+        <p class="text-lg md:text-xl mb-8 leading-relaxed" style={`color: ${designDNA.colors.text}99;`}>
+          {content.heroTagline} {content.heroSubtext}
+        </p>
+        
+        <!-- Stats Row -->
+        <div class="flex flex-wrap gap-6 mb-8" style={`color: ${designDNA.colors.text};`}>
+          <div>
+            <div class="text-3xl font-bold" style={`color: ${designDNA.colors.primary};`}>{content.heroStats.stat1.value}</div>
+            <div class="text-sm" style={`color: ${designDNA.colors.text}80;`}>{content.heroStats.stat1.label}</div>
+          </div>
+          <div>
+            <div class="text-3xl font-bold" style={`color: ${designDNA.colors.accent};`}>{content.heroStats.stat2.value}</div>
+            <div class="text-sm" style={`color: ${designDNA.colors.text}80;`}>{content.heroStats.stat2.label}</div>
+          </div>
+          <div>
+            <div class="text-3xl font-bold" style={`color: ${designDNA.colors.secondary};`}>{content.heroStats.stat3.value}</div>
+            <div class="text-sm" style={`color: ${designDNA.colors.text}80;`}>{content.heroStats.stat3.label}</div>
+          </div>
+        </div>
+        
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="/apply" class="inline-flex items-center justify-center px-8 py-4 text-lg font-bold rounded-xl shadow-lg transform hover:scale-105 transition-all" style={`background: ${designDNA.gradients.primary}; color: ${designDNA.colors.textOnPrimary};`}>
+            {getCTAVariation(domain, "hero")}
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <a href="/eligibility" class="inline-flex items-center justify-center px-8 py-4 text-lg font-bold rounded-xl border-2 transition-all hover:shadow-lg" style={`border-color: ${designDNA.colors.primary}; color: ${designDNA.colors.primary};`}>
+            {ctaSection.tertiaryButton}
+          </a>
+        </div>
+        
+        <!-- Trust Badges -->
+        <div class="flex items-center gap-6 mt-8 text-sm" style={`color: ${designDNA.colors.text}70;`}>
+          <span class="flex items-center gap-2" style={`color: ${designDNA.colors.text};`}>
+            <svg class="w-5 h-5" style={`color: ${designDNA.colors.primary};`} fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            {content.trustBadges[1]}
+          </span>
+          <span class="flex items-center gap-2" style={`color: ${designDNA.colors.text};`}>
+            <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            {content.trustBadges[2]}
+          </span>
+        </div>
+      </div>
+      
+      <!-- Right Visual -->
+      <div class="order-1 lg:order-2 relative">
+        <div class="relative rounded-3xl overflow-hidden shadow-2xl" style={`background: ${designDNA.gradients.hero};`}>
+          <div class="aspect-square flex items-center justify-center p-12">
+            <div class="text-center text-white">
+              <div class="text-8xl mb-4" style={`color: ${designDNA.colors.text};`}>{content.icons.phone}</div>
+              <div class="text-2xl font-bold mb-2" style={`color: ${designDNA.colors.text};`}>FREE Phone</div>
+              <div class="text-lg opacity-80">+ Unlimited Service</div>
+            </div>
+          </div>
+          <!-- Decorative elements -->
+          <div class="absolute top-4 right-4 w-20 h-20 rounded-full opacity-20" style={`background: ${designDNA.colors.accent};`}></div>
+          <div class="absolute bottom-4 left-4 w-32 h-32 rounded-full opacity-10" style={`background: ${designDNA.colors.textOnPrimary};`}></div>
+        </div>
+        
+        <!-- Floating Badge -->
+        <div class="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 border" style={`border-color: ${designDNA.colors.primary}30;`}>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center" style={`background: ${designDNA.colors.primary}20;`}>
+              <span class="text-2xl" style={`color: ${designDNA.colors.text};`}>{content.icons.check}</span>
+            </div>
+            <div>
+              <div class="font-bold" style={`color: ${designDNA.colors.text};`}>{content.valueProps[0]}</div>
+              <div class="text-sm" style={`color: ${designDNA.colors.text}70;`}>{content.ctaSubtext}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

@@ -1,0 +1,110 @@
+---
+/**
+ * Mega Footer - Full-featured footer with multiple columns
+ * Links, programs, resources, and CTA
+ */
+import { getSiteName, getKeyword, getDomain, getSiteURL, getDesignDNA } from '../../lib/site-config';
+import { getContentVariations, getFooterVariations, getCTASectionVariations, getNavVariations } from '../../lib/city-content-variations';
+import { getLifelineProgramText, getACPProgramText, getTribalProgramsText, getStateProgramsText, getContactUsText, getAllStatesText } from '../../lib/microcopy-variations';
+import { getCTAVariation } from '../../lib/variations/shared/cta-variations';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+const designDNA = getDesignDNA();
+const content = getContentVariations(domain);
+const footerContent = getFooterVariations(domain, keyword);
+const ctaSection = getCTASectionVariations(domain, keyword);
+const navContent = getNavVariations(domain);
+
+const keywordLower = keyword.toLowerCase();
+const keywordDisplay = keywordLower.startsWith('my ') || keywordLower.startsWith('your ') || keywordLower.startsWith('a ') || keywordLower.startsWith('the ')
+  ? keyword
+  : `Your ${keyword}`;
+---
+
+<footer class="bg-slate-900 text-white">
+  <!-- CTA Banner -->
+  <div class="border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="rounded-xl p-6 md:p-8 text-center" style={`background: linear-gradient(135deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.secondary} 100%);`}>
+        <h2 class="text-2xl md:text-3xl font-bold mb-3 text-white" style={`color: ${designDNA.colors.text};`}>
+          {footerContent.ctaHeadline}
+        </h2>
+        <p class="text-white/90 mb-6 max-w-2xl mx-auto">
+          {content.footerTagline}
+        </p>
+        <a href="/apply" class="no-underline inline-block bg-white text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-200">
+          {getCTAVariation(domain, "footer")}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Links Grid -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <!-- Programs -->
+      <div>
+        <h3 class="text-lg font-bold mb-4 text-white" style={`color: ${designDNA.colors.text};`}>{footerContent.programsSectionTitle}</h3>
+        <ul class="space-y-2">
+          <li><a href="/lifeline-program" class="text-slate-500 hover:text-white transition-colors text-sm">{getLifelineProgramText(domain)}</a></li>
+          <li><a href="/acp-program" class="text-slate-500 hover:text-white transition-colors text-sm">{getACPProgramText(domain)}</a></li>
+          <li><a href="/tribal-programs" class="text-slate-500 hover:text-white transition-colors text-sm">{getTribalProgramsText(domain)}</a></li>
+          <li><a href="/state-programs" class="text-slate-500 hover:text-white transition-colors text-sm">{getStateProgramsText(domain)}</a></li>
+        </ul>
+      </div>
+
+      <!-- Resources -->
+      <div>
+        <h3 class="text-lg font-bold mb-4 text-white" style={`color: ${designDNA.colors.text};`}>{footerContent.resourcesSectionTitle}</h3>
+        <ul class="space-y-2">
+          <li><a href="/eligibility" class="text-slate-500 hover:text-white transition-colors text-sm">{ctaSection.tertiaryButton}</a></li>
+          <li><a href="/providers" class="text-slate-500 hover:text-white transition-colors text-sm">{ctaSection.secondaryButton}</a></li>
+          <li><a href="/faq" class="text-slate-500 hover:text-white transition-colors text-sm">FAQ</a></li>
+          <li><a href="/apply" class="text-slate-500 hover:text-white transition-colors text-sm">{navContent.ctaButton}</a></li>
+        </ul>
+      </div>
+
+      <!-- Company -->
+      <div>
+        <h3 class="text-lg font-bold mb-4 text-white" style={`color: ${designDNA.colors.text};`}>{footerContent.companySectionTitle}</h3>
+        <ul class="space-y-2">
+          <li><a href="/states" class="text-slate-500 hover:text-white transition-colors text-sm">{getAllStatesText(domain)}</a></li>
+        </ul>
+      </div>
+
+      <!-- About -->
+      <div>
+        <h3 class="text-lg font-bold mb-4 text-white">{siteName}</h3>
+        <p class="text-slate-500 text-sm mb-4" style={`color: ${designDNA.colors.text};`}>
+          {footerContent.aboutText}
+        </p>
+        <div class="flex items-center flex-wrap gap-1 text-xs text-slate-500">
+          <span>{footerContent.trustBadgeSet[0]}</span>
+          <span>•</span>
+          <span>{footerContent.trustBadgeSet[1]}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+    <p class="text-slate-600 text-xs text-center max-w-4xl mx-auto">
+      {footerContent.disclaimer}
+    </p>
+  </div>
+
+  <!-- Copyright -->
+  <div class="border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <p class="text-slate-500 text-sm text-center">
+        {footerContent.copyright}
+      </p>
+    </div>
+  </div>
+</footer>
+
+

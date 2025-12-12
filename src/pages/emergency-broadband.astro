@@ -1,0 +1,186 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const pageTitle = `Free Internet Program - Emergency Broadband Transition | ${siteName}`;
+const pageDescription = "Learn about the Emergency Broadband Benefit transition to ACP and how to get free internet service. Find current options for low-cost internet programs and apply today.";
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Emergency Broadband Program Changes: Your Path to Free Internet Access",
+      "description": "Complete overview of the Emergency Broadband Benefit transition and available free internet programs for qualified households in 2025.",
+      "author": {
+        "@type": "Organization",
+        "name": "Government Phone"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Government Phone",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://government-phone.org/logo.png"
+        }
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://government-phone.org/emergency-broadband"
+      },
+      "about": {
+        "@type": "GovernmentService",
+        "name": "Free Internet Program",
+        "description": "Government assistance program providing free internet access to eligible low-income households through various federal initiatives.",
+        "provider": {
+          "@type": "Organization",
+          "name": "Federal Communications Commission"
+        }
+      }
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What happened to the Emergency Broadband Benefit program?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The Emergency Broadband Benefit ended on December 31, 2021, and transitioned into the Affordable Connectivity Program (ACP). The ACP provided similar benefits until it ran out of funding in 2024."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are there still free internet options available?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, several programs still offer free or low-cost internet including Lifeline, provider-specific programs, and state-level initiatives. Many internet providers also offer affordable plans for qualifying households."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I find free internet programs in my area?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Contact local internet providers directly, check with your state's public utilities commission, or visit community centers and libraries for information about available programs in your specific location."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I still get both free phone and internet benefits?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Many providers offer bundled services that include both phone and internet benefits. You can often combine Lifeline phone benefits with provider-specific internet discounts for maximum savings."
+          }
+        }
+      ]
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to Find Free Internet Programs After Emergency Broadband",
+      "description": "Step-by-step guide to finding and applying for free internet programs following the end of the Emergency Broadband Benefit.",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Research Available Options",
+          "text": "Check with major internet providers in your area for low-income programs and special discounts. Many companies offer their own assistance programs separate from federal initiatives."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Confirm Your Qualification Status",
+          "text": "Gather documentation proving your eligibility through SNAP, Medicaid, housing assistance, or income verification. Most programs use similar qualification criteria."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Contact Providers Directly",
+          "text": "Call internet service providers in your area and ask specifically about their low-income assistance programs. Many have dedicated customer service lines for these programs."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Your Application",
+          "text": "Complete the application process with your chosen provider, providing all required documentation and contact information for quick processing and approval."
+        }
+      ]
+    }
+  </script>
+
+  <!-- Breadcrumb Navigation -->
+  <nav class="bg-gray-50 py-3">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center space-x-2 text-sm">
+        <a href="/" class="text-[var(--color-primary)] hover:underline">Home</a>
+        <span class="text-gray-500">›</span>
+        <span class="text-gray-700">Emergency Broadband Program</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-12">
+    <div class="max-w-6xl mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">Free Government Phone</h1>
+      <p class="text-xl mb-8 max-w-3xl mx-auto">Navigate the changes from Emergency Broadband Benefit to current free internet options. Find out what programs are available now and how to get connected.</p>
+      <a href="/apply" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg inline-block">
+        FIND INTERNET PROGRAMS NOW
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    
+    <!-- Introduction Section -->
+    <section class="mb-8">
+      <p class="text-lg mb-4">Looking for free internet after the Emergency Broadband Benefit ended? The landscape has changed, but options still exist for qualified households seeking affordable connectivity. Understanding what happened to these programs and exploring current alternatives can help you stay connected without breaking your budget.</p>
+      
+      <p class="mb-4">The transition from emergency pandemic relief to ongoing assistance programs created confusion for millions of families. However, many internet providers continue offering discounted services, and new state-level programs have emerged to fill gaps left by federal program changes.</p>
+    </section>
+
+    <!-- What Was EBB Section -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary)">Understanding the Emergency Broadband Benefit Program</h2>
+      
+      <p class="mb-4">The Emergency Broadband Benefit provided crucial internet access during the COVID-19 pandemic. This temporary program offered monthly discounts up to $50 for internet service and helped millions of families stay connected when remote work and online learning became essential.</p>
+      
+      <p class="mb-4">Key features of the original program included device discounts, unlimited data options, and simplified application processes. The program successfully demonstrated the need for ongoing internet assistance, leading to the development of longer-term solutions.</p>
+      
+      <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+        <p class="text-blue-800"><strong>Important:</strong> The Emergency Broadband Benefit officially ended on December 31, 2021, transitioning participants to the Affordable Connectivity Program.</p>
+      </div>
+    </section>
+
+    <!-- Transition to ACP Section -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary)">The Shift to Affordable Connectivity Program</h2>
+      
+      <p class="mb-4">When the Emergency Broadband Benefit transitioned to ACP, participants experienced some changes in benefit amounts and eligibility requirements. The ACP maintained similar goals but operated under different funding structures and qualification criteria.</p>
+      
+      <p class="mb-4">Unfortunately, the ACP also faced funding challenges and eventually exhausted its budget in 2024. This left many households searching for alternative solutions to maintain affordable internet access. The end of ACP created a renewed focus on provider-specific programs and state initiatives.</p>
+      
+      <p class="mb-4">Despite these federal program changes, the underlying need for affordable internet remains constant. Many families who benefited from these programs continue seeking reliable, low-cost connectivity options through various available channels.</p>
+    </section>
+
+    <!-- Current Options Section -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary)">Available Free Internet Programs Today</h2>
+      
+      <p class="mb-4">Several programs continue providing internet assistance even after federal changes. Internet service providers often maintain their own low-income programs, offering significant discounts or free service to qualifying customers. These company-specific programs operate independently of federal funding.</p>
+      
+      <div class="grid md:grid-cols-2 gap-6 mb-6

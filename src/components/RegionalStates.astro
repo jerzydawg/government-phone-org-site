@@ -1,0 +1,128 @@
+---
+import { getDomain, getDesignDNA } from '../lib/site-config';
+import { getAllStatesText } from '../lib/microcopy-variations';
+
+export interface Props {
+  currentState: string;
+  currentStateName: string;
+}
+
+const { currentState, currentStateName } = Astro.props;
+const domain = getDomain();
+const designDNA = getDesignDNA();
+const allStatesText = getAllStatesText(domain);
+
+// Define regional groupings for better interlinking
+const regionalStates = {
+  'Northeast': [
+    { name: 'Connecticut', abbr: 'CT' },
+    { name: 'Maine', abbr: 'ME' },
+    { name: 'Massachusetts', abbr: 'MA' },
+    { name: 'New Hampshire', abbr: 'NH' },
+    { name: 'Rhode Island', abbr: 'RI' },
+    { name: 'Vermont', abbr: 'VT' },
+    { name: 'New Jersey', abbr: 'NJ' },
+    { name: 'New York', abbr: 'NY' },
+    { name: 'Pennsylvania', abbr: 'PA' }
+  ],
+  'Southeast': [
+    { name: 'Alabama', abbr: 'AL' },
+    { name: 'Arkansas', abbr: 'AR' },
+    { name: 'Florida', abbr: 'FL' },
+    { name: 'Georgia', abbr: 'GA' },
+    { name: 'Kentucky', abbr: 'KY' },
+    { name: 'Louisiana', abbr: 'LA' },
+    { name: 'Mississippi', abbr: 'MS' },
+    { name: 'North Carolina', abbr: 'NC' },
+    { name: 'South Carolina', abbr: 'SC' },
+    { name: 'Tennessee', abbr: 'TN' },
+    { name: 'Virginia', abbr: 'VA' },
+    { name: 'West Virginia', abbr: 'WV' }
+  ],
+  'Midwest': [
+    { name: 'Illinois', abbr: 'IL' },
+    { name: 'Indiana', abbr: 'IN' },
+    { name: 'Iowa', abbr: 'IA' },
+    { name: 'Kansas', abbr: 'KS' },
+    { name: 'Michigan', abbr: 'MI' },
+    { name: 'Minnesota', abbr: 'MN' },
+    { name: 'Missouri', abbr: 'MO' },
+    { name: 'Nebraska', abbr: 'NE' },
+    { name: 'North Dakota', abbr: 'ND' },
+    { name: 'Ohio', abbr: 'OH' },
+    { name: 'South Dakota', abbr: 'SD' },
+    { name: 'Wisconsin', abbr: 'WI' }
+  ],
+  'Southwest': [
+    { name: 'Arizona', abbr: 'AZ' },
+    { name: 'New Mexico', abbr: 'NM' },
+    { name: 'Oklahoma', abbr: 'OK' },
+    { name: 'Texas', abbr: 'TX' }
+  ],
+  'West': [
+    { name: 'Alaska', abbr: 'AK' },
+    { name: 'California', abbr: 'CA' },
+    { name: 'Colorado', abbr: 'CO' },
+    { name: 'Hawaii', abbr: 'HI' },
+    { name: 'Idaho', abbr: 'ID' },
+    { name: 'Montana', abbr: 'MT' },
+    { name: 'Nevada', abbr: 'NV' },
+    { name: 'Oregon', abbr: 'OR' },
+    { name: 'Utah', abbr: 'UT' },
+    { name: 'Washington', abbr: 'WA' },
+    { name: 'Wyoming', abbr: 'WY' }
+  ]
+};
+
+// Find which region the current state belongs to
+let currentRegion = '';
+let regionalStatesList: Array<{ name: string; abbr: string }> = [];
+
+for (const [region, states] of Object.entries(regionalStates)) {
+  if (states.some((state: { name: string; abbr: string }) => state.abbr === currentState.toUpperCase())) {
+    currentRegion = region;
+    regionalStatesList = states.filter((state: { name: string; abbr: string }) => state.abbr !== currentState.toUpperCase());
+    break;
+  }
+}
+---
+
+{currentRegion && regionalStatesList.length > 0 && (
+  <section class="py-12 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-gray-900 text-3xl font-bold text-center mb-8 ">Other {currentRegion} States</h2>
+        <p class="text-gray-900 text-center mb-8 ">
+          Government phone programs are available throughout the {currentRegion} region. 
+          Check eligibility in neighboring states.
+        </p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {regionalStatesList.slice(0, 8).map((state) => (
+            <a 
+              href={`/${state.abbr.toLowerCase()}/`}
+              class="block p-4 bg-white rounded-lg hover:bg-[var(--color-primary-light)] hover:shadow-md transition-all border border-gray-200 hover:border-[var(--color-primary)] text-center"
+            >
+              <div class="text-lg font-bold mb-1">{state.abbr}</div>
+              <div class="text-sm text-gray-900">{state.name}</div>
+            </a>
+          ))}
+        </div>
+        
+        {regionalStatesList.length > 8 && (
+          <div class="text-center mt-6">
+            <a 
+              href="/"
+              class="inline-flex items-center px-6 py-3 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:bg-[var(--color-secondary)] transition-colors"
+            >
+              {allStatesText}
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+)} 

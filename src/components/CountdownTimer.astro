@@ -1,0 +1,48 @@
+---
+import { getDesignDNA } from '../lib/site-config';
+const designDNA = getDesignDNA();
+// Countdown Timer Component
+// Shows 5 hours 59 minutes countdown for scarcity
+---
+
+<div class="countdown-timer bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold">
+  <div class="flex items-center space-x-2">
+    <span id="countdown-timer">05:59:00</span>
+  </div>
+</div>
+
+<script>
+  // Countdown timer functionality
+  function updateCountdownTimer() {
+    const countdownElement = document.getElementById('countdown-timer');
+    if (!countdownElement) return;
+
+    let [hours, minutes, seconds] = countdownElement.textContent.split(':').map(Number);
+    
+    if (seconds > 0) {
+      seconds--;
+    } else if (minutes > 0) {
+      minutes--;
+      seconds = 59;
+    } else if (hours > 0) {
+      hours--;
+      minutes = 59;
+      seconds = 59;
+    } else {
+      // Reset countdown when it reaches zero (5 hours 59 minutes)
+      hours = 5;
+      minutes = 59;
+      seconds = 0;
+    }
+
+    countdownElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // Update countdown every second
+  setInterval(updateCountdownTimer, 1000);
+
+  // Initialize countdown on page load
+  document.addEventListener('DOMContentLoaded', updateCountdownTimer);
+</script>
+
+<!-- Animation styles removed --> 

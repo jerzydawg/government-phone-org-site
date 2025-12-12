@@ -1,0 +1,105 @@
+---
+import { getDomain, getKeyword } from '../lib/site-config';
+import { getCTASectionVariations, getNavVariations } from '../lib/city-content-variations';
+import { getRelatedContentTitle, getRelatedContentSubtitle, getLearnMoreText } from '../lib/microcopy-variations';
+
+export interface Props {
+  currentPage: string;
+  currentState?: string;
+  currentCity?: string;
+}
+
+const { currentPage, currentState, currentCity } = Astro.props;
+const domain = getDomain();
+const keyword = getKeyword();
+const ctaSection = getCTASectionVariations(domain, keyword);
+const navContent = getNavVariations(domain);
+
+// Get microcopy variations
+const relatedContentTitle = getRelatedContentTitle(domain);
+const relatedContentSubtitle = getRelatedContentSubtitle(domain);
+const learnMoreText = getLearnMoreText(domain);
+
+// Define related content based on current page - using dynamic variations
+const relatedContent = {
+  'home': [
+    { title: ctaSection.tertiaryButton, href: '/eligibility', description: 'See if you qualify for free phone service' },
+    { title: 'Government Programs', href: '/programs', description: 'Learn about Lifeline and ACP programs' },
+    { title: ctaSection.secondaryButton, href: '/providers', description: 'Compare the best phone service providers' },
+    { title: 'Frequently Asked Questions', href: '/faq', description: 'Get answers to common questions' },
+    { title: 'Lifeline Program', href: '/lifeline-program', description: 'Free phone service since 1985' },
+    { title: 'ACP Program', href: '/acp-program', description: 'Enhanced internet benefits' }
+  ],
+  'state': [
+    { title: 'All Cities in This State', href: `/${currentState}/all/`, description: 'Complete list of cities with programs' },
+    { title: ctaSection.tertiaryButton, href: '/eligibility', description: 'See if you qualify for free service' },
+    { title: ctaSection.secondaryButton, href: '/providers', description: 'Best phone service providers' },
+    { title: 'Government Programs', href: '/programs', description: 'Learn about Lifeline and ACP' },
+    { title: 'Frequently Asked Questions', href: '/faq', description: 'Common questions answered' },
+    { title: 'Contact Support', href: '/contact', description: 'Get help with your application' }
+  ],
+  'city': [
+    { title: 'All Cities in This State', href: `/${currentState}/all/`, description: 'Browse all cities with programs' },
+    { title: 'State Programs', href: `/${currentState}/`, description: 'Government phone programs in this state' },
+    { title: ctaSection.tertiaryButton, href: '/eligibility', description: 'See if you qualify for free service' },
+    { title: ctaSection.secondaryButton, href: '/providers', description: 'Best phone service providers' },
+    { title: 'Lifeline Program', href: '/lifeline-program', description: 'Free phone service program' },
+    { title: 'ACP Program', href: '/acp-program', description: 'Enhanced internet benefits' }
+  ],
+  'program': [
+    { title: ctaSection.tertiaryButton, href: '/eligibility', description: 'See if you qualify for this program' },
+    { title: ctaSection.secondaryButton, href: '/providers', description: 'Providers offering this program' },
+    { title: 'Frequently Asked Questions', href: '/faq', description: 'Common questions about this program' },
+    { title: navContent.ctaButton, href: '/apply', description: 'Start your application process' },
+    { title: 'Contact Support', href: '/contact', description: 'Get help with your application' },
+    { title: 'All Programs', href: '/programs', description: 'Compare all government programs' }
+  ],
+  'providers': [
+    { title: ctaSection.tertiaryButton, href: '/eligibility', description: 'See if you qualify for free service' },
+    { title: 'Government Programs', href: '/programs', description: 'Learn about Lifeline and ACP' },
+    { title: 'Lifeline Program', href: '/lifeline-program', description: 'Free phone service program' },
+    { title: 'ACP Program', href: '/acp-program', description: 'Enhanced internet benefits' },
+    { title: navContent.ctaButton, href: '/apply', description: 'Start your application process' },
+    { title: 'Frequently Asked Questions', href: '/faq', description: 'Common questions about providers' }
+  ],
+  'eligibility': [
+    { title: navContent.ctaButton, href: '/apply', description: 'Start your application process' },
+    { title: 'Government Programs', href: '/programs', description: 'Learn about Lifeline and ACP' },
+    { title: ctaSection.secondaryButton, href: '/providers', description: 'Best phone service providers' },
+    { title: 'Lifeline Program', href: '/lifeline-program', description: 'Free phone service program' },
+    { title: 'ACP Program', href: '/acp-program', description: 'Enhanced internet benefits' },
+    { title: 'Frequently Asked Questions', href: '/faq', description: 'Common eligibility questions' }
+  ]
+};
+
+const content = (relatedContent[currentPage as keyof typeof relatedContent] || relatedContent.home) as Array<{ title: string; href: string; description: string }>;
+---
+
+<section class="py-12 bg-gray-50">
+  <div class="container mx-auto px-4">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-gray-900 text-3xl font-bold text-center mb-8 ">{relatedContentTitle}</h2>
+      <p class="text-gray-900 text-center mb-8 ">
+        {relatedContentSubtitle}
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {content.map((item: { title: string; href: string; description: string }) => (
+          <a 
+            href={item.href}
+            class="block p-6 bg-white rounded-lg hover:bg-[var(--color-primary-light)] hover:shadow-md transition-all border border-gray-200 hover:border-[var(--color-primary)]"
+          >
+            <h3 class="text-gray-900 text-lg font-semibold mb-2 ">{item.title}</h3>
+            <p class="text-gray-900 text-sm mb-3 ">{item.description}</p>
+            <div class="text-[var(--color-primary)] text-sm font-medium flex items-center">
+              {learnMoreText}
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</section> 

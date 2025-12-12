@@ -1,0 +1,363 @@
+---
+import { supabase } from '../lib/supabase';
+import { getDesignDNA, getDomain, getKeyword } from '../lib/site-config';
+import { getCTASectionVariations } from '../lib/city-content-variations';
+import { 
+  getStateSelectorSearchText,
+  getPopularStatesText,
+  getShowAllStatesText,
+  getLoadingStatesText,
+  getUrgencyBadge,
+  getCountdownLabelText,
+  getCountdownMessageText,
+  getCheckEligibilityCTAText,
+  getCheckEligibilityButtonText,
+  getSearchPlaceholderText
+} from '../lib/microcopy-variations';
+
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const keyword = getKeyword();
+const ctaSection = getCTASectionVariations(domain, keyword);
+
+// Get microcopy variations
+const stateSelectorSearch = getStateSelectorSearchText(domain);
+const popularStates = getPopularStatesText(domain);
+const showAllStates = getShowAllStatesText(domain);
+const loadingStates = getLoadingStatesText(domain);
+const urgencyBadge = getUrgencyBadge(domain);
+const countdownLabel = getCountdownLabelText(domain);
+const countdownMessage = getCountdownMessageText(domain);
+const checkEligibilityCTA = getCheckEligibilityCTAText(domain);
+const checkEligibilityButton = getCheckEligibilityButtonText(domain);
+const searchPlaceholder = getSearchPlaceholderText(domain);
+
+// Fetch states data
+const { data: states, error: statesError } = supabase ? await supabase
+  .from('states')
+  .select('id, name, abbreviation')
+  .order('name') : { data: null, error: null };
+
+if (statesError) {
+  console.error('Error fetching states:', statesError);
+}
+
+// Fallback data if Supabase is not available
+const fallbackStates = [
+  { name: 'Alabama', abbreviation: 'AL' },
+  { name: 'Alaska', abbreviation: 'AK' },
+  { name: 'Arizona', abbreviation: 'AZ' },
+  { name: 'Arkansas', abbreviation: 'AR' },
+  { name: 'California', abbreviation: 'CA' },
+  { name: 'Colorado', abbreviation: 'CO' },
+  { name: 'Connecticut', abbreviation: 'CT' },
+  { name: 'Delaware', abbreviation: 'DE' },
+  { name: 'Florida', abbreviation: 'FL' },
+  { name: 'Georgia', abbreviation: 'GA' },
+  { name: 'Hawaii', abbreviation: 'HI' },
+  { name: 'Idaho', abbreviation: 'ID' },
+  { name: 'Illinois', abbreviation: 'IL' },
+  { name: 'Indiana', abbreviation: 'IN' },
+  { name: 'Iowa', abbreviation: 'IA' },
+  { name: 'Kansas', abbreviation: 'KS' },
+  { name: 'Kentucky', abbreviation: 'KY' },
+  { name: 'Louisiana', abbreviation: 'LA' },
+  { name: 'Maine', abbreviation: 'ME' },
+  { name: 'Maryland', abbreviation: 'MD' },
+  { name: 'Massachusetts', abbreviation: 'MA' },
+  { name: 'Michigan', abbreviation: 'MI' },
+  { name: 'Minnesota', abbreviation: 'MN' },
+  { name: 'Mississippi', abbreviation: 'MS' },
+  { name: 'Missouri', abbreviation: 'MO' },
+  { name: 'Montana', abbreviation: 'MT' },
+  { name: 'Nebraska', abbreviation: 'NE' },
+  { name: 'Nevada', abbreviation: 'NV' },
+  { name: 'New Hampshire', abbreviation: 'NH' },
+  { name: 'New Jersey', abbreviation: 'NJ' },
+  { name: 'New Mexico', abbreviation: 'NM' },
+  { name: 'New York', abbreviation: 'NY' },
+  { name: 'North Carolina', abbreviation: 'NC' },
+  { name: 'North Dakota', abbreviation: 'ND' },
+  { name: 'Ohio', abbreviation: 'OH' },
+  { name: 'Oklahoma', abbreviation: 'OK' },
+  { name: 'Oregon', abbreviation: 'OR' },
+  { name: 'Pennsylvania', abbreviation: 'PA' },
+  { name: 'Rhode Island', abbreviation: 'RI' },
+  { name: 'South Carolina', abbreviation: 'SC' },
+  { name: 'South Dakota', abbreviation: 'SD' },
+  { name: 'Tennessee', abbreviation: 'TN' },
+  { name: 'Texas', abbreviation: 'TX' },
+  { name: 'Utah', abbreviation: 'UT' },
+  { name: 'Vermont', abbreviation: 'VT' },
+  { name: 'Virginia', abbreviation: 'VA' },
+  { name: 'Washington', abbreviation: 'WA' },
+  { name: 'West Virginia', abbreviation: 'WV' },
+  { name: 'Wisconsin', abbreviation: 'WI' },
+  { name: 'Wyoming', abbreviation: 'WY' }
+];
+
+// Use Supabase data if available, otherwise use fallback
+const displayStates = states || fallbackStates;
+---
+
+<section class="py-12 md:py-20 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Mobile Header with Search -->
+    <div class="md:hidden mb-8" style={`color: ${designDNA.colors.text};`}>
+      <h2 class="text-2xl font-bold mb-3 text-center" style={`color: ${designDNA.colors.text};`}>
+        Find Your <span style={`color: ${designDNA.colors.primary};`}>State</span>
+      </h2>
+      <p class="text-base mb-6 text-center" style={`color: ${designDNA.colors.text};`}>
+        {stateSelectorSearch}
+      </p>
+      
+      <!-- Mobile Search Bar -->
+      <div class="relative mb-6" style={`color: ${designDNA.colors.text};`}>
+        <input 
+          type="text" 
+          id="mobile-state-search"
+          placeholder={searchPlaceholder}
+          class="w-full px-4 py-3 pl-12 bg-white rounded-2xl shadow-lg border border-gray-200 focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-light)] transition-all"
+        />
+        <svg class="w-6 h-6 absolute left-4 top-3.5" style={`color: ${designDNA.colors.text};`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      <!-- Quick Access States -->
+      <div class="mb-4" style={`color: ${designDNA.colors.text};`}>
+        <p class="text-xs mb-2" style={`color: ${designDNA.colors.text};`}>{popularStates}</p>
+        <div class="flex flex-wrap gap-2">
+          <a href="/ca" class="px-3 py-1.5 rounded-full text-sm font-medium" style={`background-color: ${designDNA.colors.primary}20; color: ${designDNA.colors.primary};`}>California</a>
+          <a href="/tx" class="px-3 py-1.5 rounded-full text-sm font-medium" style={`background-color: ${designDNA.colors.primary}20; color: ${designDNA.colors.primary};`}>Texas</a>
+          <a href="/fl" class="px-3 py-1.5 rounded-full text-sm font-medium" style={`background-color: ${designDNA.colors.primary}20; color: ${designDNA.colors.primary};`}>Florida</a>
+          <a href="/ny" class="px-3 py-1.5 rounded-full text-sm font-medium" style={`background-color: ${designDNA.colors.primary}20; color: ${designDNA.colors.primary};`}>New York</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Header -->
+    <div class="hidden md:block text-center mb-16">
+      <h2 class="text-4xl lg:text-5xl font-bold mb-6" style={`color: ${designDNA.colors.text};`}>
+        Find Your <span style={`color: ${designDNA.colors.primary};`}>State</span> and <span style={`color: ${designDNA.colors.accent};`}>City</span>
+      </h2>
+      <p class="text-xl max-w-3xl mx-auto" style={`color: ${designDNA.colors.text};`}>
+        Select your state to see available cities and check your eligibility for free phone service.
+      </p>
+    </div>
+
+    <!-- States Grid -->
+    {displayStates && displayStates.length > 0 ? (
+      <>
+        <!-- Mobile States Grid -->
+        <div class="md:hidden">
+          <div id="mobile-states-grid" class="grid grid-cols-3 gap-2 mb-8" style={`color: ${designDNA.colors.text};`}>
+            {displayStates.map((state, index) => (
+              <a
+                href={`/${state.abbreviation.toLowerCase()}`}
+                class={`state-card bg-white rounded-xl p-3 shadow-sm border border-gray-200 text-center transform transition-all duration-300 ${index >= 12 ? 'hidden' : ''}`}
+                data-state-name={state.name.toLowerCase()}
+                data-state-abbr={state.abbreviation.toLowerCase()}
+              >
+                <div class="text-lg font-bold" style={`color: ${designDNA.colors.text};`}>{state.abbreviation}</div>
+                <div class="text-xs truncate" style={`color: ${designDNA.colors.text};`}>{state.name}</div>
+              </a>
+            ))}
+          </div>
+          
+          <!-- Load More Button -->
+          <button 
+            id="load-more-states"
+            class="w-full py-3 rounded-xl font-medium transition-all hover:bg-gray-200" style={`color: ${designDNA.colors.text};`}
+          >
+            {showAllStates}
+          </button>
+        </div>
+
+        <!-- Desktop States Grid -->
+        <div class="hidden md:grid grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {displayStates.map((state) => (
+            <a
+              href={`/${state.abbreviation.toLowerCase()}`}
+              class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-[var(--color-primary)]"
+            >
+              <div class="text-center">
+                <div class="text-2xl font-bold group-hover:text-[var(--color-primary)] transition-colors" style={`color: ${designDNA.colors.text};`}>
+                  {state.abbreviation}
+                </div>
+                <div class="text-sm mt-1" style={`color: ${designDNA.colors.text};`}>
+                  {state.name}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </>
+    ) : (
+      <div class="text-center py-8">
+        <div class="text-lg">{loadingStates}</div>
+      </div>
+    )}
+
+    <!-- Mobile Urgency Section -->
+    <div class="md:hidden mt-8">
+      <div class="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl p-6">
+        <h3 class="text-lg font-bold mb-2 flex items-center justify-center" style={`color: ${designDNA.colors.text};`}>
+          <span class="mr-2" style={`color: ${designDNA.colors.text};`}>⏰</span> {urgencyBadge.mobile}
+        </h3>
+        <p class="text-sm mb-4 text-center" style={`color: ${designDNA.colors.text};`}>
+          {countdownMessage}
+        </p>
+        
+        <!-- Mobile Countdown -->
+        <div class="bg-white/20 backdrop-blur rounded-xl p-3 mb-4" style={`color: ${designDNA.colors.text};`}>
+          <div class="text-2xl font-bold text-center font-mono" id="mobile-state-countdown">05:59:00</div>
+          <div class="text-xs text-center">{countdownLabel}</div>
+        </div>
+        
+        <a href="/apply" rel="noopener noreferrer" class="block w-full bg-yellow-400 font-bold py-3 px-4 rounded-xl text-center shadow-lg" style={`color: ${designDNA.colors.text};`}>
+          {ctaSection.tertiaryButton} →
+        </a>
+      </div>
+    </div>
+
+    <!-- Desktop Urgency Section -->
+    <div class="hidden md:block mt-16">
+      <div class="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl p-6 max-w-2xl mx-auto text-center">
+        <h3 class="text-2xl font-bold mb-4" style={`color: ${designDNA.colors.text};`}>
+          ⏰ {urgencyBadge.desktop}
+        </h3>
+        <p class="text-xl mb-6" style={`color: ${designDNA.colors.text};`}>
+          Get your FREE phone service before this offer expires!
+        </p>
+        
+        <!-- Countdown Timer -->
+        <div class="bg-white rounded-xl p-4 mb-6" style={`color: ${designDNA.colors.text};`}>
+          <div class="text-3xl font-bold" id="state-countdown">05:59:00</div>
+          <div class="text-sm" style={`color: ${designDNA.colors.text};`}>{countdownLabel}</div>
+        </div>
+        
+        <button class="bg-yellow-400 hover:bg-yellow-500 font-bold py-4 px-8 rounded-xl text-lg transition-colors" style={`color: ${designDNA.colors.text};`}>
+          {checkEligibilityButton}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Mobile state search functionality
+  const mobileSearchInput = document.getElementById('mobile-state-search');
+  const stateCards = document.querySelectorAll('.state-card');
+  const loadMoreBtn = document.getElementById('load-more-states');
+  
+  if (mobileSearchInput && stateCards.length > 0) {
+    mobileSearchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      let visibleCount = 0;
+      
+      stateCards.forEach(card => {
+        const stateName = card.dataset.stateName;
+        const stateAbbr = card.dataset.stateAbbr;
+        
+        if (stateName.includes(searchTerm) || stateAbbr.includes(searchTerm)) {
+          card.classList.remove('hidden');
+          (card as HTMLElement).style.display = 'block';
+          visibleCount++;
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+      
+      // Hide load more button when searching
+      if (searchTerm) {
+        loadMoreBtn?.classList.add('hidden');
+      } else {
+        loadMoreBtn?.classList.remove('hidden');
+        // Reset to show only first 12 states
+        stateCards.forEach((card, index) => {
+          if (index < 12) {
+            card.classList.remove('hidden');
+            (card as HTMLElement).style.display = 'block';
+          } else {
+            card.classList.add('hidden');
+            (card as HTMLElement).style.display = 'none';
+          }
+        });
+      }
+    });
+  }
+  
+  // Load more states functionality
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', () => {
+      stateCards.forEach(card => {
+        card.classList.remove('hidden');
+      });
+      (loadMoreBtn as HTMLElement).style.display = 'none';
+    });
+  }
+
+  // Countdown timer functionality
+  function updateStateCountdown() {
+    const countdownElements = [
+      document.getElementById('state-countdown'),
+      document.getElementById('mobile-state-countdown')
+    ];
+    
+    countdownElements.forEach(element => {
+      if (!element) return;
+
+      let [hours, minutes, seconds] = element.textContent.split(':').map(Number);
+      
+      if (seconds > 0) {
+        seconds--;
+      } else if (minutes > 0) {
+        minutes--;
+        seconds = 59;
+      } else if (hours > 0) {
+        hours--;
+        minutes = 59;
+        seconds = 59;
+      } else {
+        // Reset countdown when it reaches zero (5 hours 59 minutes)
+        hours = 5;
+        minutes = 59;
+        seconds = 0;
+      }
+
+      element.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    });
+  }
+
+  // Update countdown every second
+  setInterval(updateStateCountdown, 1000);
+
+  // Initialize countdown on page load
+  document.addEventListener('DOMContentLoaded', updateStateCountdown);
+</script>
+
+<style>
+  /* Mobile animations */
+  @media (max-width: 768px) {
+    .state-card {
+      animation: fadeInUp 0.3s ease-out forwards;
+      opacity: 0;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .state-card:nth-child(n) {
+      animation-delay: calc(0.05s * var(--index));
+    }
+  }
+</style> 

@@ -1,0 +1,91 @@
+---
+/**
+ * Programs Overview Section
+ * Shows Lifeline, ACP, and Tribal program cards
+ */
+import { getDesignDNA, getKeyword, getDomain, getKeywordId } from '../../lib/site-config';
+import { getContentVariations, getProgramsSectionVariations } from '../../lib/city-content-variations';
+import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
+
+const designDNA = getDesignDNA();
+const keyword = getKeyword();
+const domain = getDomain();
+const keywordId = getKeywordId();
+
+// Get content variations
+const content = getContentVariations(domain);
+const programs = getProgramsSectionVariations(domain, keyword);
+
+// Load keyword-specific H2 variations with error handling
+let sectionH2 = { h2: 'Available Programs' };
+try {
+  const { getH2Variation } = await loadKeywordVariations(keywordId);
+  const result = getH2Variation(domain, 'programs');
+  if (result && result.h2) { sectionH2 = result; }
+} catch (e) {
+  console.error('Failed to load keyword variations for Programs:', e);
+  // Will use fallback h2 above
+}
+---
+
+<section class="py-12 md:py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-gray-900 text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">
+      {sectionH2.h2}
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-6">
+      <!-- Lifeline Program -->
+      <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+        <div class="text-4xl mb-4" style={`color: ${designDNA.colors.primary};`}>{content.icons.phone}</div>
+        <h3 class="text-gray-900 text-xl font-bold mb-3 ">{programs.lifelineTitle}</h3>
+        <p class="text-gray-900 mb-4 ">
+          {programs.lifelineDescription}
+        </p>
+        <ul class="text-sm mb-4 space-y-1">
+          {programs.lifelineBullets.map((bullet) => (
+            <li>• {bullet}</li>
+          ))}
+        </ul>
+        <a href="/lifeline-program" class="font-semibold hover:opacity-80" style={`color: ${designDNA.colors.primary};`}>
+          {programs.lifelineCta} →
+        </a>
+      </div>
+
+      <!-- ACP Program -->
+      <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+        <div class="text-4xl mb-4" style={`color: ${designDNA.colors.accent};`}>{content.icons.money}</div>
+        <h3 class="text-gray-900 text-xl font-bold mb-3 ">{programs.acpTitle}</h3>
+        <p class="text-gray-900 mb-4 ">
+          {programs.acpDescription}
+        </p>
+        <ul class="text-sm mb-4 space-y-1">
+          {programs.acpBullets.map((bullet) => (
+            <li>• {bullet}</li>
+          ))}
+        </ul>
+        <a href="/acp-program" class="font-semibold hover:opacity-80" style={`color: ${designDNA.colors.accent};`}>
+          {programs.acpCta} →
+        </a>
+      </div>
+
+      <!-- Tribal Programs -->
+      <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+        <div class="text-4xl mb-4" style={`color: ${designDNA.colors.secondary};`}>{content.icons.support}</div>
+        <h3 class="text-gray-900 text-xl font-bold mb-3 ">{programs.tribalTitle}</h3>
+        <p class="text-gray-900 mb-4 ">
+          {programs.tribalDescription}
+        </p>
+        <ul class="text-sm mb-4 space-y-1">
+          {programs.tribalBullets.map((bullet) => (
+            <li>• {bullet}</li>
+          ))}
+        </ul>
+        <a href="/tribal-programs" class="font-semibold hover:opacity-80" style={`color: ${designDNA.colors.secondary};`}>
+          {programs.tribalCta} →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+

@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.government-phone.org"
+        }
+      ],
+      "destination": "https://government-phone.org/:path*",
+      "permanent": true
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import RelatedContent from '../components/RelatedContent.astro';
+import { getDesignDNA, getSiteURL, getSiteName } from '../lib/site-config';
+const designDNA = getDesignDNA();
+const siteURL = getSiteURL();
+const siteName = getSiteName();
+
+const title ="Page Not Found | Free Government Phone";
+const description ="The page you're looking for doesn't exist. Find government phone assistance programs in your area.";
+const canonicalURL = `${siteURL}/404/`;
+
+// Structured Data for 404 Page
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Page Not Found",
+  "description": description,
+  "url": canonicalURL,
+  "mainEntity": {
+    "@type": "Thing",
+    "name": "404 Error"
+  }
+};
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalURL}>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <Breadcrumbs items={[
+    { label: 'Home', href: '/' },
+    { label: 'Page Not Found' }
+  ]} />
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="text-center mb-8" style={`color: ${designDNA.colors.text};`}>
+      <h1 class="text-6xl font-bold mb-4" style={`color: ${designDNA.colors.text};`}>404</h1>
+      <h2 class="text-3xl font-bold mb-4" style={`color: ${designDNA.colors.text};`}>Page Not Found</h2>
+      <p class="text-xl mb-8" style={`color: ${designDNA.colors.text};`}>
+        The page you're looking for doesn't exist. It may have been moved or deleted.
+      </p>
+    </div>
+
+    <!-- Expanded Content Section -->
+    <div class="bg-white rounded-2xl p-8 shadow-lg mb-8" style={`color: ${designDNA.colors.text};`}>
+      <h3 class="text-2xl font-bold mb-4" style={`color: ${designDNA.colors.text};`}>Find Free Government Phone Programs</h3>
+      <p class="mb-6 text-lg" style={`color: ${designDNA.colors.text};`}>
+        Looking for government phone assistance in your area? Our website provides comprehensive information about federal communication assistance programs including Lifeline and ACP (Affordable Connectivity Program). These programs help eligible low-income households access free or discounted phone and internet services.
+      </p>
+      <p class="mb-6" style={`color: ${designDNA.colors.text};`}>
+        Whether you're searching for eligibility requirements, application procedures, or approved providers, we have the resources you need. Our tools help you find programs available in your state and city, check your qualification status, and connect with service providers offering free government phone benefits.
+      </p>
+      <p class="mb-6" style={`color: ${designDNA.colors.text};`}>
+        If you're looking for specific information about government phone programs, try visiting our main pages for programs overview, eligibility checking, provider comparisons, or frequently asked questions. You can also browse by state to find programs available in your area.
+      </p>
+      
+      <!-- Additional Content Sections -->
+      <div class="mt-8 pt-8 border-t border-gray-200">
+        <h4 class="text-xl font-bold mb-4" style={`color: ${designDNA.colors.text};`}>Understanding Government Phone Assistance Programs</h4>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          Government phone programs are designed to ensure that all Americans have access to essential communication services, regardless of their financial situation. The Lifeline program, established in 1985, provides monthly discounts on phone and internet service to qualifying low-income households. The Affordable Connectivity Program (ACP), launched more recently, offers enhanced benefits including higher monthly discounts and one-time device discounts.
+        </p>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          Eligibility for these programs is typically based on household income (at or below 135-200% of Federal Poverty Guidelines) or participation in government assistance programs such as SNAP (Supplemental Nutrition Assistance Program), Medicaid, SSI (Supplemental Security Income), Federal Public Housing Assistance, or the Veterans Pension and Survivors Benefit programs. Many college students also qualify through Federal Pell Grant eligibility.
+        </p>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          The application process is straightforward and can usually be completed online in just a few minutes. Most applicants receive instant approval, especially those qualifying through program participation. Once approved, benefits are applied directly to your monthly service bill, significantly reducing or eliminating your communication costs. You can combine Lifeline and ACP benefits for maximum savings, potentially receiving over $39 per month in discounts.
+        </p>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          Approved providers offer a range of services including unlimited talk and text, monthly data allowances, and free smartphones. Service quality and coverage vary by provider and location, so it's important to compare options before selecting a provider. All approved providers must meet federal standards for service quality and customer support.
+        </p>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          Benefits continue as long as you remain eligible and complete annual recertification. The recertification process is simple and can typically be completed online. If your circumstances change, you must notify your provider to ensure continued eligibility. Most providers offer online portals where you can manage your account, check your benefit status, and complete recertification.
+        </p>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          If you're unsure about your eligibility or need help with the application process, our website provides comprehensive resources including eligibility checkers, program comparisons, provider directories, and detailed frequently asked questions. You can also contact approved providers directly for personalized assistance with your application.
+        </p>
+      </div>
+      
+      <div class="mt-8 pt-8 border-t border-gray-200">
+        <h4 class="text-xl font-bold mb-4" style={`color: ${designDNA.colors.text};`}>Program Benefits and Features</h4>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          Lifeline provides up to $9.25 per month off your phone or internet service (or $34.25 per month on Tribal lands). ACP provides up to $30 per month off internet service (or $75 per month on Tribal lands) plus a one-time $100 discount on a device. When combined, these benefits can cover your entire monthly communication costs, making phone and internet service completely free for eligible households.
+        </p>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          Services typically include unlimited nationwide calling, unlimited text messaging, and monthly data allowances ranging from 3GB to unlimited depending on your provider and plan. Many providers also offer additional features like voicemail, caller ID, call waiting, and international calling options. Internet service through ACP includes high-speed broadband suitable for video calls, online learning, remote work, and streaming.
+        </p>
+        <p class="mb-4" style={`color: ${designDNA.colors.text};`}>
+          There are no contracts, credit checks, or hidden fees associated with government phone programs. You can cancel your service at any time without penalty. If you move to a different state, you can transfer your benefits, though you may need to select a new provider if your current one doesn't serve your new location.
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <a href="/programs" style={`background: ${designDNA.colors.primary};`} class="text-white font-bold py-3 px-6 rounded-lg transition-colors text-center" onmouseover={`this.style.background='${designDNA.colors.secondary}';`} onmouseout={`this.style.background='${designDNA.colors.primary}';`}>
+          View Programs
+        </a>
+        <a href="/eligibility" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors text-center">
+          Check Eligibility
+        </a>
+        <a href="/providers" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors text-center">
+          Find Providers
+        </a>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <a href="/lifeline-program" class="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors text-center">
+          Lifeline Program
+        </a>
+        <a href="/acp-program" class="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors text-center">
+          ACP Program
+        </a>
+      </div>
+    </div>
+
+    <!-- Additional Helpful Links -->
+    <div class="bg-gray-50 rounded-2xl p-6 mb-8">
+      <h3 class="text-xl font-bold mb-4 text-center" style={`color: ${designDNA.colors.text};`}>Popular Pages</h3>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <a href="/" style={`color: ${designDNA.colors.primary};`} class="font-medium text-center" onmouseover={`this.style.color='${designDNA.colors.secondary}';`} onmouseout={`this.style.color='${designDNA.colors.primary}';`}>Home</a>
+        <a href="/faq" style={`color: ${designDNA.colors.primary};`} class="font-medium text-center" onmouseover={`this.style.color='${designDNA.colors.secondary}';`} onmouseout={`this.style.color='${designDNA.colors.primary}';`}>FAQ</a>
+        <a href="/contact" style={`color: ${designDNA.colors.primary};`} class="font-medium text-center" onmouseover={`this.style.color='${designDNA.colors.secondary}';`} onmouseout={`this.style.color='${designDNA.colors.primary}';`}>Contact</a>
+        <a href="/states" style={`color: ${designDNA.colors.primary};`} class="font-medium text-center" onmouseover={`this.style.color='${designDNA.colors.secondary}';`} onmouseout={`this.style.color='${designDNA.colors.primary}';`}>All States</a>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <a href="/" style={`color: ${designDNA.colors.primary};`} class="font-semibold text-lg" onmouseover={`this.style.color='${designDNA.colors.secondary}';`} onmouseout={`this.style.color='${designDNA.colors.primary}';`}>
+        ← Back to Home
+      </a>
+    </div>
+  </main>
+  
+  <!-- Related Content -->
+  <RelatedContent currentPage="home" />
+</Layout> 

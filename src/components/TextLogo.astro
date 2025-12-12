@@ -1,0 +1,88 @@
+---
+/**
+ * TextLogo - Self-contained text-based logo component
+ * No external APIs - pure CSS for SEO-safe logos across 1K+ sites
+ * 
+ * Usage:
+ * <TextLogo size="md" variant="gradient" />
+ */
+import { getDesignDNA, getSiteName } from '../lib/site-config';
+
+interface Props {
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  variant?: 'gradient' | 'solid' | 'outline' | 'glow' | 'shadow';
+  class?: string;
+}
+
+const { 
+  size = 'md', 
+  variant = 'gradient',
+  class: className = ''
+} = Astro.props;
+
+const designDNA = getDesignDNA();
+const siteName = getSiteName().toUpperCase();
+
+// Size configurations
+const sizes = {
+  xs: { text: 'text-sm', tracking: 'tracking-wide' },
+  sm: { text: 'text-lg', tracking: 'tracking-wide' },
+  md: { text: 'text-2xl', tracking: 'tracking-wider' },
+  lg: { text: 'text-3xl', tracking: 'tracking-wider' },
+  xl: { text: 'text-4xl', tracking: 'tracking-widest' }
+};
+
+const sizeConfig = sizes[size];
+
+// Variant styles - all designed to POP
+const variants = {
+  gradient: {
+    textStyle: `background: linear-gradient(135deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.accent} 50%, ${designDNA.colors.secondary} 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`,
+    extraClass: 'drop-shadow-sm'
+  },
+  solid: {
+    textStyle: `color: ${designDNA.colors.primary};`,
+    extraClass: 'drop-shadow-md'
+  },
+  outline: {
+    textStyle: `-webkit-text-stroke: 2px ${designDNA.colors.primary}; color: transparent;`,
+    extraClass: ''
+  },
+  glow: {
+    textStyle: `color: ${designDNA.colors.primary}; text-shadow: 0 0 10px ${designDNA.colors.primary}40, 0 0 20px ${designDNA.colors.primary}30, 0 0 30px ${designDNA.colors.primary}20;`,
+    extraClass: ''
+  },
+  shadow: {
+    textStyle: `color: ${designDNA.colors.primary}; text-shadow: 3px 3px 0 ${designDNA.colors.secondary}, 6px 6px 0 ${designDNA.colors.accent}30;`,
+    extraClass: ''
+  }
+};
+
+const variantConfig = variants[variant];
+---
+
+<a 
+  href="/" 
+  class:list={[
+    'no-underline font-black whitespace-nowrap',
+    sizeConfig.text,
+    sizeConfig.tracking,
+    variantConfig.extraClass,
+    className
+  ]}
+  style={variantConfig.textStyle}
+>
+  {siteName}
+</a>
+
+<style>
+  a {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: 0.05em;
+    transition: all 0.2s ease;
+  }
+  a:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+</style>

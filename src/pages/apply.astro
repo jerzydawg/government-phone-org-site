@@ -1,0 +1,192 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const title = `Free Government Phone - Apply in 2 Minutes | ${siteName}`;
+const description = "Apply for your free government phone in just 2 minutes. Quick approval process, no credit check required. Get free monthly service and data today.";
+const currentUrl = `${siteURL}/apply`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "Quick 2-Minute Application Process for Free Government Phone",
+      "description": "Fast approval system helps eligible Americans get their free government phone and service within minutes of applying online.",
+      "author": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": currentUrl
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How fast can I get approved for a free government phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Most applicants receive approval within 2-5 business days. The online application takes just 2 minutes to complete, and you'll get instant confirmation of your submission."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need good credit to get a free government phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No credit check is required for free government phones. The program focuses on income requirements and participation in qualifying assistance programs, not your credit history."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens after I submit my application?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "After submission, you'll receive an email confirmation with your application ID. The carrier will review your information and contact you within 2-5 business days with approval status and next steps."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I keep my current phone number?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, you can transfer your existing phone number to your new free government phone. Simply request number portability during the application process or after receiving your device."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to Apply for Free Government Phone in 2 Minutes",
+      "description": "Simple step-by-step process to complete your free government phone application quickly and get approved fast.",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Confirm Your Eligibility Status",
+          "text": "Use our quick eligibility checker to verify you meet income or program participation requirements for the free phone program."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Complete Online Application Form",
+          "text": "Fill out the simple application form with your personal information and proof of eligibility. The entire process takes under 2 minutes."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Required Documentation",
+          "text": "Upload or provide documentation that proves your eligibility, such as benefit award letters or income statements."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Await Approval Notification",
+          "text": "Receive confirmation within 2-5 business days via email or phone call with your approval status and device shipping information."
+        }
+      ]
+    },
+    {
+      "@type": "GovernmentService",
+      "name": "Free Government Phone Application Service",
+      "description": "Fast 2-minute online application process for eligible Americans to receive free smartphones with monthly service and data through the Lifeline program.",
+      "provider": {
+        "@type": "GovernmentOrganization",
+        "name": "Federal Communications Commission"
+      },
+      "areaServed": "United States",
+      "audience": {
+        "@type": "Audience",
+        "name": "Low-income Americans and benefit recipients"
+      }
+    }
+  ]
+};
+---
+
+<Layout title={title} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+  
+  <!-- Breadcrumb Navigation -->
+  <nav class="bg-gray-50 py-3 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <ol class="flex items-center space-x-2 text-sm">
+        <li><a href="/" class="text-[var(--color-primary)] hover:underline">Home</a></li>
+        <li><span class="text-gray-400">/</span></li>
+        <li><span class="text-gray-600">Apply</span></li>
+      </ol>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Free Government Phone</h1>
+      <p class="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+        Get approved in just 2 minutes! No credit check required - just complete our quick application and receive your free smartphone with monthly service.
+      </p>
+      <a href="#eligibility-checker" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg">
+        START 2-MINUTE APPLICATION
+      </a>
+      <p class="text-sm text-gray-600 mt-3">✓ Instant confirmation ✓ No hidden fees ✓ Free shipping</p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Intro Section -->
+    <section class="mb-12">
+      <p class="text-lg text-gray-700 mb-6">
+        Ready to get your <strong>Free Government Phone</strong>? Our streamlined application takes just 2 minutes to complete, and you could be approved within days. Over 13 million Americans already use this program to stay connected with family, employers, and emergency services at no cost.
+      </p>
+      
+      <p class="text-gray-700 mb-6">
+        The Lifeline program provides eligible households with a free smartphone and monthly service including talk, text, and data. You don't need perfect credit or a large deposit - just meet the income requirements or participate in qualifying assistance programs. Most applicants who submit complete applications get approved quickly and receive their device within 7-10 business days.
+      </p>
+      
+      <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold text-green-800 mb-3">Why Choose Government Phone?</h3>
+        <ul class="text-green-700 space-y-2">
+          <li>✓ Lightning-fast 2-minute application process</li>
+          <li>✓ Approval within 2-5 business days</li>
+          <li>✓ No credit check or security deposit required</li>
+          <li>✓ Free nationwide shipping to your door</li>
+          <li>✓ Customer support throughout the process</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Eligibility Checker Section -->
+    <section id="eligibility-checker" class="mb-12">
+      <h2 class="text-3xl font-bold text-gray-900 mb-6">Quick Eligibility Assessment</h2>
+      
+      <p class="text-gray-700 mb-6">
+        Before starting your application, verify you meet the requirements for a <strong>Free Government Phone</strong>. The program serves low-income Americans and those receiving federal assistance benefits.
+      </p>
+      
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-800 mb-4">Income-Based Qualification</h3>
+        <p class="text-blue-700 mb-3">Your household income must be at or below 135% of Federal Poverty Guidelines:</p>
+        <div class="grid md:grid-cols-2 gap-4 text-blue-700">
+          <div>
+            <strong>1 person:</strong> $20,385 or less annually<br>
+            <strong>2 people:</strong> $27,465 or less annually<br>
+            <strong>3 people:</strong> $34,545 or less annually
+          </div>
+          <div>
+            <strong>4 people:</strong> $41,625 or less annually<br>
+            <strong>5 people:</strong> $48,705 or less annually<br>

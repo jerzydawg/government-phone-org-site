@@ -1,0 +1,53 @@
+---
+/**
+ * CTA Section
+ * Call to action with apply buttons
+ */
+import { getDesignDNA, getKeyword, getDomain, getKeywordId } from '../../lib/site-config';
+import { getContentVariations, getCTASectionVariations } from '../../lib/city-content-variations';
+import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
+import { getCTAVariation } from '../../lib/variations/shared/cta-variations';
+
+const designDNA = getDesignDNA();
+const keyword = getKeyword();
+const domain = getDomain();
+const keywordId = getKeywordId();
+
+const content = getContentVariations(domain);
+const ctaSection = getCTASectionVariations(domain, keyword);
+
+// Load keyword-specific H2 variations with error handling
+let sectionH2 = { h2: `Ready to Get Your ${keyword}?` };
+try {
+  const { getH2Variation } = await loadKeywordVariations(keywordId);
+  const result = getH2Variation(domain, 'cta');
+  if (result && result.h2) { sectionH2 = result; }
+} catch (e) {
+  console.error('Failed to load keyword variations for CTA:', e);
+  // Will use fallback h2 above
+}
+---
+
+<section class="text-white py-8 md:py-16" style={`background-color: ${designDNA.colors.primary};`}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-gray-900 text-2xl sm:text-3xl md:text-4xl font-bold mb-4 md:mb-6 ">
+      {sectionH2.h2}
+    </h2>
+    <p class="text-gray-900 text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto opacity-90 px-4">
+      {content.footerTagline}. {content.heroSubtext}
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+      <a href="/apply" class="no-underline bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition duration-300">
+        {content.ctaButton}
+      </a>
+      <a href="/providers" class="no-underline bg-transparent border-2 border-white hover:bg-white text-white hover:text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition duration-300">
+        {ctaSection.secondaryButton}
+      </a>
+      <a href="/eligibility" class="no-underline bg-transparent border-2 border-white hover:bg-white text-white hover:text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition duration-300">
+        {ctaSection.tertiaryButton}
+      </a>
+    </div>
+  </div>
+</section>
+
+

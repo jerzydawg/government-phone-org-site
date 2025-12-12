@@ -1,0 +1,147 @@
+---
+import { getSiteName, getKeyword, getDesignDNA, getDomain } from '../lib/site-config';
+import { getContentVariations, getTextVariation } from '../lib/city-content-variations';
+import { getUrgencyBadge, getSecondaryHeadline } from '../lib/microcopy-variations';
+import { getCTAVariation } from '../lib/variations/shared/cta-variations';
+
+// Props (can accept custom H1 from parent)
+interface Props {
+  customH1?: string;
+}
+const { customH1 } = Astro.props;
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const designDNA = getDesignDNA();
+const domain = getDomain();
+
+// Get content variations for this domain
+const content = getContentVariations(domain);
+
+// Get microcopy variations
+const urgencyBadge = getUrgencyBadge(domain);
+const secondaryHeadline = getSecondaryHeadline(domain);
+
+// Use custom H1 if provided, preserve full variation text
+const h1Text = customH1 || keyword;
+const keywordToHighlight = 'Free Government Phone';
+
+// Smart split: only split around the keyword if it exists, otherwise show full text
+let beforeKeyword = '';
+let afterKeyword = '';
+let hasKeyword = false;
+
+if (h1Text.includes(keywordToHighlight)) {
+  const parts = h1Text.split(keywordToHighlight);
+  beforeKeyword = parts[0];
+  afterKeyword = parts[1] || '';
+  hasKeyword = true;
+} else {
+  // If keyword not found, just show the full H1 without splitting
+  beforeKeyword = h1Text;
+}
+---
+
+<section class="relative" style={`background: linear-gradient(135deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.primaryDark || designDNA.colors.primary} 100%);`}>
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16 lg:py-24">
+    <!-- Hero Content -->
+    <div class="text-center max-w-4xl mx-auto">
+      <!-- Scarcity Badge - Dynamic from 47 variations -->
+      <div class="inline-flex items-center px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-full shadow-lg mb-4 animate-pulse">
+        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+        </svg>
+        <span class="hidden sm:inline">{urgencyBadge.desktop}</span>
+        <span class="sm:hidden">{urgencyBadge.mobile}</span>
+      </div>
+      <!-- Single Responsive Headline - Dynamic from site config with keyword highlighting -->
+      <h1 class="text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight animate-fade-in">
+        {hasKeyword ? (
+          <>
+            {beforeKeyword}<span class="text-gray-900 text-4xl sm:text-5xl md:text-6xl lg:text-7xl" style={`color: ${designDNA.colors.accent};`}>{keywordToHighlight}</span>{afterKeyword}
+          </>
+        ) : (
+          <span>{beforeKeyword}</span>
+        )}
+      </h1>
+      <p class="text-gray-900 text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal text-white mt-3 md:mt-4 mb-6 md:mb-8 ">
+        {secondaryHeadline}
+      </p>
+
+      <!-- Social Proof Stats -->
+      <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 mb-6 md:mb-8 max-w-md md:max-w-2xl mx-auto border border-white/20 shadow-xl animate-slide-up">
+        <div class="grid grid-cols-3 gap-2 md:gap-6 text-white">
+          <div class="text-center">
+            <div class="text-2xl md:text-2xl font-bold">{content.heroStats.stat1.value}</div>
+            <div class="text-xs md:text-sm text-white/90">{content.heroStats.stat1.label}</div>
+          </div>
+          <div class="text-center border-x border-white/20 md:border-0">
+            <div class="text-2xl md:text-2xl font-bold">{content.heroStats.stat2.value}</div>
+            <div class="text-xs md:text-sm text-white/90">{content.heroStats.stat2.label}</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl md:text-2xl font-bold">{content.heroStats.stat3.value}</div>
+            <div class="text-xs md:text-sm text-white/90">{content.heroStats.stat3.label}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Single Responsive Value Proposition - Dynamic content -->
+      <p class="text-gray-900 text-base md:text-lg lg:text-xl xl:text-2xl text-white mb-6 md:mb-8 max-w-sm md:max-w-3xl mx-auto">
+        <span class="text-gray-900 font-semibold" style={`color: ${designDNA.colors.accent};`}>FREE</span> {content.heroTagline}<span class="text-gray-900 hidden md:inline"> {content.heroSubtext}</span>
+      </p>
+
+      <!-- Single Responsive Primary CTA Section -->
+      <div class="space-y-4 mb-6 md:mb-8 text-gray-900">
+        <!-- Main CTA Button - Responsive -->
+        <a href="/apply" rel="noopener noreferrer" class="group relative block w-full md:w-auto md:inline-block md:max-w-md md:mx-auto bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-bold py-4 md:py-6 px-6 md:px-8 rounded-2xl shadow-2xl transform hover:scale-105 active:scale-95 transition-all duration-150 md:duration-200 text-center">
+          <span class="text-gray-900 relative z-10 text-lg md:text-xl">{getCTAVariation(domain, 'hero')}</span>
+          <div class="absolute inset-0 bg-gradient-to-r from-yellow-300 to-yellow-400 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:block"></div>
+        </a>
+        
+        <!-- Single Responsive Trust Indicators - Dynamic -->
+        <div class="flex flex-wrap items-center justify-center gap-2 md:gap-0 md:space-x-6 text-white/90 text-xs md:text-sm">
+          <div class="flex items-center">
+            {content.trustBadges[0]}
+          </div>
+          <div class="flex items-center">
+            {content.trustBadges[1]}
+          </div>
+          <div class="hidden md:flex items-center">
+            {content.trustBadges[2]}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Wave (mobile only for visual effect) -->
+  <div class="md:hidden absolute bottom-0 left-0 right-0">
+    <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z" fill="white" fill-opacity="0.1"/>
+    </svg>
+  </div>
+</section>
+
+
+<style>
+  @keyframes slide-up {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out forwards;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+</style>

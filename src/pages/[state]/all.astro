@@ -1,0 +1,302 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+import { createCitySlug } from '../../lib/slug-utils.js';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import RelatedContent from '../../components/RelatedContent.astro';
+import { getSiteURL, getDesignDNA } from '../../lib/site-config';
+
+const designDNA = getDesignDNA();
+
+const SITE_URL = getSiteURL();
+
+// Get state from URL params
+const { state } = Astro.params;
+const stateUpper = state?.toUpperCase();
+
+// Validate required params
+if (!state) {
+  return Astro.redirect('/404');
+}
+
+// Initialize variables
+let stateData: any = null;
+let cities: Array<{name: string; population: number; id: number}> = [];
+let totalCities = 0;
+
+// Fetch state and all cities
+if (supabase) {
+  try {
+    // Get state data
+    const { data: stateResult } = await supabase
+      .from('states')
+      .select('*')
+      .eq('abbreviation', stateUpper)
+      .maybeSingle();
+    
+    stateData = stateResult;
+    
+    if (stateData) {
+      // Get ALL cities for this state with pagination (Supabase has 1000 row limit)
+      let allCities: Array<{name: string; population: number; id: number}> = [];
+      let offset = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const { data: citiesData, count } = await supabase
+          .from('cities')
+          .select('id, name, population', { count: 'exact' })
+          .eq('state_id', stateData.id)
+          .order('name', { ascending: true })
+          .range(offset, offset + batchSize - 1);
+        
+        if (citiesData && citiesData.length > 0) {
+          allCities = [...allCities, ...citiesData];
+          offset += batchSize;
+          totalCities = count || allCities.length;
+          hasMore = citiesData.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      cities = allCities;
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+
+// If no state data found, redirect to 404
+if (!stateData) {
+  return Astro.redirect('/404');
+}
+
+const title = `All Cities in ${stateData.name} | Free Government Phone Programs`;
+const description = `Browse all ${totalCities.toLocaleString()} cities in ${stateData.name} with free government phone programs. Find Lifeline and ACP coverage in your city.`;
+const canonicalURL = `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/all/`;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": `All Cities in ${stateData.name} with Free Government Phone`,
+  "description": description,
+  "url": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/all/`,
+  "numberOfItems": totalCities,
+  "isPartOf": {
+    "@type": "WebPage",
+    "name": `${stateData.name} Government Phone Programs`,
+    "url": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
+  }
+};
+
+const breadcrumbData = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": `${SITE_URL}/`
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": stateData.name,
+      "item": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "All Cities",
+      "item": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/all/`
+    }
+  ]
+};
+
+// Group cities alphabetically
+const citiesByLetter: Record<string, typeof cities> = {};
+cities.forEach(city => {
+  const firstLetter = city.name.charAt(0).toUpperCase();
+  if (!citiesByLetter[firstLetter]) {
+    citiesByLetter[firstLetter] = [];
+  }
+  citiesByLetter[firstLetter].push(city);
+});
+
+const alphabet = Object.keys(citiesByLetter).sort();
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalURL}>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbData)} />
+  
+  <main class="min-h-screen bg-gray-50">
+    <!-- Breadcrumbs -->
+    <Breadcrumbs items={[
+      { label: 'Home', href: '/' },
+      { label: stateData.name, href: `/${stateData.abbreviation.toLowerCase()}/` },
+      { label: 'All Cities' }
+    ]} />
+    
+    <!-- Hero Section -->
+    <section style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`} class="text-white py-8">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+          <h1 class="text-gray-900 text-3xl md:text-4xl font-bold mb-4 ">
+            All Cities in {stateData.name}
+          </h1>
+          <p class="text-gray-900 text-xl mb-6" style={`color: ${designDNA.colors.textOnPrimary}CC;`}>
+            {totalCities.toLocaleString()} cities with free government phone programs
+          </p>
+          <a href={`/${stateData.abbreviation.toLowerCase()}/`} class="inline-flex items-center text-white hover:text-white transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to {stateData.name}
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alphabet Quick Jump -->
+    <section class="bg-white border-b sticky top-16 z-30">
+      <div class="container mx-auto px-4 py-3">
+        <div class="flex flex-wrap justify-center gap-1">
+          {alphabet.map((letter) => (
+            <a 
+              href={`#letter-${letter}`}
+              style={`background: #F3F4F6;`} class="w-8 h-8 flex items-center justify-center rounded text-sm font-medium text-gray-900 transition-colors" onmouseover={`this.style.background='${designDNA.colors.primary}'; this.style.color='white';`} onmouseout="this.style.background='#F3F4F6'; this.style.color='inherit';"
+            >
+              {letter}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Introduction Content -->
+    <section class="py-8 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-gray-900 text-3xl font-bold mb-6 text-center">Free Government Phone Programs Available in All {stateData.name} Cities</h2>
+          <p class="text-gray-900 text-lg mb-4">
+            Government phone assistance programs are available to eligible residents in all {totalCities.toLocaleString()} cities throughout {stateData.name}. Whether you live in a major metropolitan area or a small rural community, federal programs like <a href="/lifeline-program" style={`color: ${designDNA.colors.primary};`} class="hover:underline font-semibold">Lifeline</a> and <a href="/acp-program" class="text-green-600 hover:underline font-semibold">ACP (Affordable Connectivity Program)</a> provide essential communication services to qualifying households.
+          </p>
+          <p class="text-gray-900 text-lg mb-4">
+            These programs ensure that all Americans have access to phone and internet services, regardless of their location or financial situation. Benefits include monthly service discounts, free smartphones, unlimited talk and text, and data allowances. The exact benefits and available providers may vary by city, but the core programs are available statewide.
+          </p>
+          <p class="text-gray-900 text-lg mb-4">
+            To qualify for free government phone service in {stateData.name}, your household income must be at or below 135-200% of Federal Poverty Guidelines, or you must participate in qualifying government assistance programs such as SNAP, Medicaid, SSI, Federal Public Housing Assistance, or the Veterans Pension program. Many college students also qualify through Federal Pell Grant eligibility.
+          </p>
+          <p class="text-gray-900 text-lg mb-4">
+            The application process is simple and can be completed online in just a few minutes. Most applicants receive instant approval, especially those qualifying through program participation. Once approved, benefits are applied directly to your monthly service bill, reducing or eliminating your communication costs. You can combine Lifeline and ACP benefits for maximum savings.
+          </p>
+          <p class="text-gray-900 text-lg mb-6">
+            Below, you'll find a complete alphabetical listing of all cities in {stateData.name} where government phone programs are available. Click on any city name to learn more about programs, providers, and eligibility requirements specific to that location. You can also <a href="/eligibility" style={`color: ${designDNA.colors.primary};`} class="hover:underline font-semibold">check your eligibility</a> or <a href="/providers" class="text-green-600 hover:underline font-semibold">compare providers</a> to find the best option for your needs.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cities List -->
+    <div class="container mx-auto px-4 py-8">
+      {alphabet.map((letter) => (
+        <section id={`letter-${letter}`} class="mb-8 scroll-mt-32">
+          <div class="flex items-center mb-6 text-gray-900">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white text-2xl font-bold mr-4" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`}>
+              {letter}
+            </div>
+            <div>
+              <h2 class="text-gray-900 text-2xl font-bold ">Cities Starting with {letter}</h2>
+              <p class="text-gray-900">{citiesByLetter[letter].length} cities with government phone programs</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {citiesByLetter[letter].map((city) => (
+              <a 
+                href={`/${stateData.abbreviation.toLowerCase()}/${createCitySlug(city.name)}/`}
+                style={`border-color: #E5E7EB;`} class="group block bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 border" onmouseover={`this.style.borderColor='${designDNA.colors.primary}80';`} onmouseout="this.style.borderColor='#E5E7EB';"
+              >
+                <h3 class="text-gray-900 font-medium transition-colors truncate" style={`color: inherit;`} onmouseover={`this.style.color='${designDNA.colors.primary}';`} onmouseout="this.style.color='inherit';">
+                  {city.name}
+                </h3>
+                {city.population && (
+                  <p class="text-gray-900 text-xs  mt-1">
+                    {city.population.toLocaleString()} residents
+                  </p>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <!-- Back to Top -->
+    <div class="fixed bottom-8 right-8">
+      <a 
+        href="#"
+        style={`background: ${designDNA.colors.primary};`} class="w-12 h-12 text-white rounded-full shadow-lg flex items-center justify-center transition-colors" onmouseover={`this.style.background='${designDNA.colors.secondary}';`} onmouseout={`this.style.background='${designDNA.colors.primary}';`}
+        aria-label="Back to top"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- CTA Section -->
+    <section style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`} class="text-white py-8">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-gray-900 text-2xl font-bold mb-4 ">Ready to Get Your Free Government Phone?</h2>
+        <p class="mb-6 max-w-xl mx-auto" style={`color: ${designDNA.colors.textOnPrimary}CC;`}>
+          Government phone programs are available in all {totalCities.toLocaleString()} cities in {stateData.name}
+        </p>
+        <a href="/apply" class="block md:inline-block w-full md:w-auto max-w-md md:max-w-none mx-auto py-4 px-10 text-lg font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 active:scale-95 transition-all duration-300" style={`background: linear-gradient(135deg, ${designDNA.colors.accent} 0%, ${designDNA.colors.accentDark || designDNA.colors.accent} 100%); color: white;`}>
+          Apply Now
+        </a>
+      </div>
+    </section>
+
+    <!-- Related Links Section -->
+    <section class="py-10 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <h2 class="text-gray-900 text-2xl font-bold text-center mb-6">Explore More</h2>
+        <div class="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <a href={`/${stateData.abbreviation.toLowerCase()}/`} class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition text-center">
+            <h3 class="text-gray-900 font-semibold mb-2">State Programs</h3>
+            <p class="text-gray-900 text-sm">View {stateData.name} programs</p>
+          </a>
+          <a href="/eligibility" class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition text-center">
+            <h3 class="text-gray-900 font-semibold mb-2">Check Eligibility</h3>
+            <p class="text-gray-900 text-sm">See if you qualify</p>
+          </a>
+          <a href="/programs" class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition text-center">
+            <h3 class="text-gray-900 font-semibold mb-2">All Programs</h3>
+            <p class="text-gray-900 text-sm">Learn about Lifeline and ACP</p>
+          </a>
+          <a href="/providers" class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition text-center">
+            <h3 class="text-gray-900 font-semibold mb-2">Find Providers</h3>
+            <p class="text-gray-900 text-sm">Compare approved providers</p>
+          </a>
+          <a href="/lifeline-program" class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition text-center">
+            <h3 class="text-gray-900 font-semibold mb-2">Lifeline Program</h3>
+            <p class="text-gray-900 text-sm">Free phone service program</p>
+          </a>
+          <a href="/acp-program" class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition text-center">
+            <h3 class="text-gray-900 font-semibold mb-2">ACP Program</h3>
+            <p class="text-gray-900 text-sm">Enhanced internet benefits</p>
+          </a>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Related Content -->
+    <RelatedContent currentPage="state" currentState={stateData.abbreviation} />
+  </main>
+</Layout>

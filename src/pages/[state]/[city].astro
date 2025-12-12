@@ -1,0 +1,1030 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import RelatedCities from '../../components/RelatedCities.astro';
+import SimilarCities from '../../components/SimilarCities.astro';
+import RelatedContent from '../../components/RelatedContent.astro';
+import { supabase } from '../../lib/supabase';
+import { createCitySlug, slugToCityName, generateCityNameVariationsForLookup } from '../../lib/slug-utils.js';
+// SINGLE SOURCE: All city content variations from one file
+import { 
+  getCityContentVariations,
+  getCityStats,
+  getCityFacts,
+  type CityData,
+  type StateData
+} from '../../lib/city-content-variations';
+import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName } from '../../lib/site-config';
+import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
+
+export const prerender = false;
+
+// Get Design DNA for dynamic colors
+const designDNA = getDesignDNA();
+
+const SITE_URL = getSiteURL();
+const DOMAIN = getDomain();
+const SITE_NAME = getSiteName();
+const keywordId = getKeywordId(); // Already has fallback in getKeywordId() function
+
+// Load keyword-specific variations for city pages with error handling
+let getH1Variation: any = null;
+let getH3Variation: any = null;
+let getMetaVariations: any = null;
+try {
+  const keywordModule = await loadKeywordVariations(keywordId);
+  if (keywordModule && typeof keywordModule.getH1Variation === 'function') {
+    getH1Variation = keywordModule.getH1Variation;
+  }
+  if (keywordModule && typeof keywordModule.getH3Variation === 'function') {
+    getH3Variation = keywordModule.getH3Variation;
+  }
+  if (keywordModule && typeof keywordModule.getMetaVariations === 'function') {
+    getMetaVariations = keywordModule.getMetaVariations;
+  }
+} catch (e: any) {
+  console.error('Failed to load keyword variations for city page:', e?.message || e);
+  // Fallback: create simple functions
+  getH1Variation = () => ({ h1: 'Free Government Phone' });
+  getH3Variation = () => ({ h3: 'Free Government Phone' });
+}
+
+// Get the state and city from URL params
+const { state, city } = Astro.params;
+
+// Fetch city data from Supabase
+let cityData = null;
+let stateData = null;
+let error = null;
+
+// Check if Supabase is available
+if (!supabase) {
+  console.error('Supabase client not available - missing environment variables');
+  error = 'Database not configured';
+} else {
+  try {
+    // Validate params
+    if (!state || !city) {
+      error = 'Invalid parameters';
+    } else {
+      // Get state data
+      const { data: stateResult, error: stateError } = await supabase
+        .from('states')
+        .select('*')
+        .eq('abbreviation', state.toUpperCase())
+        .maybeSingle();
+        
+      if (stateError) {
+        console.error('State lookup error:', stateError);
+        error = 'State not found';
+      } else if (!stateResult) {
+        error = 'State not found';
+      } else {
+        stateData = stateResult;
+      }
+      
+      // Get city data
+      if (stateData && !error) {
+        // Generate all possible city name variations
+        const nameVariations = generateCityNameVariationsForLookup(city);
+        let cityResult = null;
+        let cityError = null;
+        
+        // Try each variation until we find a match
+        for (const cityName of nameVariations) {
+          const result = await supabase
+            .from('cities')
+            .select('*')
+            .eq('state_id', stateData.id)
+            .eq('name', cityName)
+            .maybeSingle();
+          
+          if (result.data && !result.error) {
+            cityResult = result.data;
+            break;
+          }
+          
+          // If exact match fails, try case-insensitive
+          if (!result.data) {
+            const caseResult = await supabase
+              .from('cities')
+              .select('*')
+              .eq('state_id', stateData.id)
+              .ilike('name', cityName)
+              .maybeSingle();
+            
+            if (caseResult.data && !caseResult.error) {
+              cityResult = caseResult.data;
+              break;
+            }
+          }
+        }
+        
+        if (!cityResult) {
+          console.error('City not found after trying variations:', nameVariations);
+          error = 'City not found';
+        } else {
+          cityData = cityResult;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Database error:', err);
+    error = 'Database error';
+    // Don't throw - return 404 instead to prevent 500 errors
+  }
+}
+
+// Fetch related cities in the same state
+let relatedCities: Array<{
+  name: string;
+  state_abbreviation: string;
+  population?: number;
+  id?: number;
+}> = [];
+
+if (cityData && stateData && supabase && !error) {
+  try {
+    const { data: relatedCitiesData } = await supabase
+      .from('cities')
+      .select('id, name, population')
+      .eq('state_id', stateData.id)
+      .neq('id', cityData.id)
+      .order('population', { ascending: false })
+      .limit(9);
+    
+    if (relatedCitiesData) {
+      relatedCities = relatedCitiesData.map(city => ({
+        name: city.name,
+        state_abbreviation: stateData.abbreviation,
+        population: city.population,
+        id: city.id
+      }));
+    }
+  } catch (err) {
+    console.error('Error fetching related cities:', err);
+    // Don't fail the page if related cities can't be loaded
+  }
+}
+
+// Fetch similar cities from OTHER states (by similar population)
+let similarCities: Array<{
+  name: string;
+  state_abbr: string;
+  state_name: string;
+  population?: number;
+}> = [];
+
+if (cityData && stateData && supabase && !error) {
+  try {
+    const pop = cityData.population || 50000;
+    const minPop = Math.max(1000, pop * 0.5);
+    const maxPop = pop * 2;
+    
+    const { data: similarData } = await supabase
+      .from('cities')
+      .select('name, population, state_id, states(abbreviation, name)')
+      .neq('state_id', stateData.id)
+      .gte('population', minPop)
+      .lte('population', maxPop)
+      .order('population', { ascending: false })
+      .limit(12);
+    
+    if (similarData) {
+      similarCities = similarData.map((city: any) => ({
+        name: city.name,
+        state_abbr: city.states?.abbreviation || '',
+        state_name: city.states?.name || '',
+        population: city.population
+      })).filter((c: any) => c.state_abbr);
+    }
+  } catch (err) {
+    console.error('Error fetching similar cities:', err);
+  }
+}
+
+// If data not found, return 404 (not 500)
+if (error || !cityData || !stateData) {
+  return Astro.redirect('/404');
+}
+
+const cityName = cityData.name;
+const stateName = stateData.name;
+const stateAbbr = stateData.abbreviation;
+
+// Get city statistics
+const cityStats = getCityStats(cityData as CityData);
+const population = cityStats.population || cityData.population || 0;
+
+// Get dynamic H1 variation for city page
+let cityH1 = `Free Government Phone in ${cityName}, ${stateAbbr}`;
+if (getH1Variation) {
+  try {
+    const h1Content = getH1Variation(DOMAIN, 'city', cityName, stateAbbr);
+    cityH1 = h1Content.h1;
+  } catch (h1Error: any) {
+    console.error('Error getting H1 variation for city page:', h1Error?.message || h1Error);
+    // Use fallback already set above
+  }
+}
+
+// Get COMPOUND-HASH content variations for 99-100% uniqueness across 1000+ sites
+// Uses domain + city name for maximum variation distribution
+const variations = getCityContentVariations(
+  DOMAIN,
+  cityName,
+  stateAbbr,
+  population
+);
+
+// Get city facts (uses city data, not domain hash)
+const cityDataForFacts: CityData = {
+  id: cityData.id || 0,
+  name: cityData.name,
+  state_id: stateData.id,
+  population: cityData.population,
+  stats: cityData.stats
+};
+const cityFacts = getCityFacts(cityName, stateName, stateAbbr, cityDataForFacts);
+
+// SEO-optimized content with variations
+let title = `Free Government Phone in ${cityName}, ${stateAbbr}`;
+let description = `Get a FREE government phone in ${cityName}, ${stateAbbr}. Learn about Lifeline & ACP programs, eligibility requirements, and how to apply.`;
+
+// Use keyword variations if available
+if (getMetaVariations) {
+  try {
+    const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'city', stateName, cityName);
+    title = metaContent.title;
+    description = metaContent.description;
+  } catch (metaError: any) {
+    console.error('Error getting meta variations for city page:', metaError?.message || metaError);
+    // Use fallback values already set above
+  }
+}
+
+// Ensure canonical URL has trailing slash
+const citySlug = createCitySlug(cityName);
+const canonicalUrl = new URL(`/${stateAbbr.toLowerCase()}/${citySlug}/`, SITE_URL);
+
+// Enhanced structured data with city-specific information
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": `Free Government Phone in ${cityName}, ${stateAbbr}`,
+  "description": description,
+  "url": canonicalUrl.toString(),
+  "mainEntity": {
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": `Who qualifies for federal communication assistance in ${cityName}, ${stateAbbr}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You may qualify if you participate in federal assistance programs like Medicaid, SNAP, SSI, or if your household income is at or below 135% of the Federal Poverty Guidelines."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `How long does approval take for federal communication assistance in ${cityName}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": variations.faqApprovalTime
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `Can I keep my current phone number in ${cityName}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": variations.faqKeepNumber
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `What documents do I need to apply in ${cityName}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": variations.faqDocuments
+        }
+      }
+    ]
+  }
+};
+
+// Add City schema
+const citySchema: any = {
+  "@context": "https://schema.org",
+  "@type": "City",
+  "name": cityName,
+  "containedIn": {
+    "@type": "State",
+    "name": stateName,
+    "abbreviation": stateAbbr
+  }
+};
+if (population) {
+  citySchema.population = population;
+}
+
+// Add LocalBusiness schema for providers
+const providerSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": `Government Phone Providers in ${cityName}`,
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": cityName,
+    "addressRegion": stateAbbr,
+    "addressCountry": "US"
+  },
+  "areaServed": {
+    "@type": "City",
+    "name": cityName
+  }
+};
+
+// Add BreadcrumbList schema for SEO
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": SITE_URL
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": stateName,
+      "item": `${SITE_URL}/${stateAbbr.toLowerCase()}/`
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": cityName,
+      "item": canonicalUrl.toString()
+    }
+  ]
+};
+
+// Add HowTo schema for application process
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": `How to Apply for Free Government Phone in ${cityName}, ${stateAbbr}`,
+  "description": `Step-by-step guide to applying for free government phone service in ${cityName}`,
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Verify Your Eligibility",
+      "text": variations.step1,
+      "url": `${SITE_URL}/eligibility`
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Choose Your Provider",
+      "text": variations.step2,
+      "url": `${SITE_URL}/providers`
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Submit Application",
+      "text": variations.step3,
+      "url": `${SITE_URL}/apply`
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Receive Your Free Phone",
+      "text": variations.step4
+    }
+  ]
+};
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalUrl}>
+  <!-- Hero Section - Uses Design DNA colors -->
+  <section class="relative overflow-hidden text-white" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`}>
+    <div class="container mx-auto px-4 py-10 md:py-24 relative z-10">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-gray-900 text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+          {cityH1}
+        </h1>
+        <p class="text-gray-900 text-xl md:text-2xl mb-8 text-white max-w-3xl mx-auto">
+          Access free smartphone and monthly service through the Lifeline & ACP programs. 
+          <span class="text-gray-900 font-semibold ">No credit check, no hidden fees, instant approval.</span>
+        </p>
+        
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          <a href="/apply" class="btn-accent text-lg px-8 py-4 font-bold shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-300 inline-block text-center">
+            Verify Eligibility Now
+          </a>
+          <a href="/providers" class="btn-primary text-lg px-8 py-4 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 inline-block text-center">
+            View Providers
+          </a>
+        </div>
+        
+        <!-- Trust Badges -->
+        <div class="flex flex-wrap justify-center items-center gap-6 opacity-90">
+          <div class="trust-badge">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-900 text-sm font-medium">FCC Approved</span>
+            </div>
+          </div>
+          <div class="trust-badge">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-gray-900 text-sm font-medium">No Credit Check</span>
+            </div>
+          </div>
+          <div class="trust-badge">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-900 text-sm font-medium">Instant Approval</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Breadcrumbs with Schema -->
+  <Breadcrumbs items={[
+    { label: 'Home', href: '/' },
+    { label: stateName, href: `/${stateAbbr.toLowerCase()}/` },
+    { label: cityName }
+  ]} />
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <!-- Main Article Content -->
+      <div class="lg:col-span-2">
+        <article class="prose prose-lg max-w-none">
+          <!-- Introduction - Domain-based unique content -->
+          <div class="mb-8 text-gray-900">
+            <h2 class="text-gray-900 text-3xl font-bold text-[#22223B] mb-4 ">
+              Access Free Government Phone in {cityName}
+            </h2>
+            <p class="text-gray-900 text-lg text-[#6B7280] leading-relaxed" set:html={variations.intro} />
+          </div>
+
+          <!-- City Information Section -->
+          {population && (
+            <div style={`background: linear-gradient(135deg, ${designDNA.colors.primary}15, ${designDNA.colors.secondary}15); border-color: ${designDNA.colors.primary}30;`} class="rounded-lg p-6 mb-8 border">
+              <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mb-4 ">About {cityName}, {stateAbbr}</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {population && (
+                  <div class="flex items-start">
+                    <svg class="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                    </svg>
+                    <div>
+                      <p class="text-gray-900 font-semibold text-[#22223B]">Population</p>
+                      <p class="text-gray-900 text-[#6B7280] text-sm">{population.toLocaleString()} residents</p>
+                    </div>
+                  </div>
+                )}
+                <div class="flex items-start">
+                  <svg class="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                  </svg>
+                  <div>
+                    <p class="text-gray-900 font-semibold text-[#22223B]">Location</p>
+                    <p class="text-gray-900 text-[#6B7280] text-sm">{cityName}, {stateAbbr}</p>
+                  </div>
+                </div>
+              </div>
+              {cityFacts.length > 0 && (
+                <div style={`border-color: ${designDNA.colors.primary}40;`} class="mt-4 pt-4 border-t">
+                  <ul class="space-y-2 text-[#6B7280] text-sm">
+                    {cityFacts.map((fact) => (
+                      <li class="text-gray-900 flex items-start">
+                        <svg class="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span set:html={fact} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <!-- Table of Contents -->
+          <div class="bg-[#F8F9FA] rounded-lg p-6 mb-8 text-gray-900">
+            <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mb-4 ">Table of Contents</h3>
+            <ul class="space-y-2 text-[#6B7280]">
+              <li><a href="#eligibility" class="hover:opacity-80 transition-colors">1. Who Qualifies for Free Government Phone in {cityName}?</a></li>
+              <li><a href="#how-to-apply" class="hover:opacity-80 transition-colors">2. How to Apply for the Lifeline & ACP Programs</a></li>
+              <li><a href="#providers" class="hover:opacity-80 transition-colors">3. Best Providers in {cityName}, {stateAbbr}</a></li>
+              <li><a href="#benefits" class="hover:opacity-80 transition-colors">4. Benefits of Free Government Phone</a></li>
+              <li><a href="#faq" class="hover:opacity-80 transition-colors">5. Frequently Asked Questions</a></li>
+              <li><a href="#contact" class="hover:opacity-80 transition-colors">6. Contact & Support</a></li>
+            </ul>
+          </div>
+
+          <!-- DETAILED PROGRAM HISTORY SECTION - SITE 1 ONLY -->
+          <section style={`background: linear-gradient(135deg, ${designDNA.colors.primary}15, ${designDNA.colors.secondary}15);`} class="mb-16 rounded-xl p-6">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              Understanding Federal Communication Programs in {cityName}
+            </h2>
+            
+            <div class="prose max-w-none">
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                The Lifeline program was established in 1985 under the Federal Communications Commission (FCC) as part of a 
+                broader initiative to ensure universal telecommunications service access across the United States. Initially 
+                focused on providing discounted landline telephone service to low-income households, the program has evolved 
+                significantly over nearly four decades to meet changing communication needs.
+              </p>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                In 2005, the FCC modernized Lifeline to include wireless service, recognizing that mobile phones had become 
+                essential communication tools for job searching, accessing healthcare, staying connected with family, and 
+                reaching emergency services. This expansion, sometimes informally referred to as the "Obama Phone" program, 
+                brought mobile connectivity to millions of Americans who otherwise couldn't afford it.
+              </p>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                The Affordable Connectivity Program (ACP) represents the most recent evolution in federal communication assistance. 
+                Launched in 2021 as part of the Infrastructure Investment and Jobs Act, ACP provides up to $30 per month toward 
+                internet service for eligible households (or up to $75 per month for households on qualifying Tribal lands). 
+                This program recognizes that in today's digital age, internet access is no longer a luxury—it's a necessity 
+                for education, employment, healthcare access, and civic participation.
+              </p>
+              
+              <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mt-8 mb-4 ">
+                How Programs Work Together in {cityName}, {stateAbbr}
+              </h3>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                Residents of {cityName} can benefit from both Lifeline and ACP simultaneously through participating service providers. 
+                Many providers in {stateAbbr} bundle these benefits together to offer completely free smartphone service—meaning 
+                $0 monthly bills, no activation fees, and no hidden charges. The combination of Lifeline's subsidy (typically 
+                $9.25/month) plus ACP's benefit ($30/month) can cover the full cost of basic wireless service.
+              </p>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                For {cityName} residents, this means access to modern Android or iOS smartphones with capabilities including:
+                unlimited voice calling to anywhere in the United States, unlimited text messaging (SMS and MMS), high-speed 
+                mobile data (typically 10-35GB per month depending on provider), mobile hotspot capability for connecting 
+                other devices, and access to all standard smartphone features including web browsing, email, social media, 
+                video calling, GPS navigation, and app downloads.
+              </p>
+              
+              <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mt-8 mb-4 ">
+                Real Impact on {cityName} Families
+              </h3>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                Federal communication assistance programs have transformed lives across {cityName}. Consider a single parent 
+                working multiple jobs who needs reliable phone service to coordinate childcare, receive work schedules, and 
+                stay reachable for school emergencies—but can't afford $50-100 per month for wireless service. Or a senior 
+                citizen on a fixed Social Security income who needs to call their doctor, order medications, and contact 
+                family members but must choose between phone service and groceries. Or a recent college graduate seeking 
+                employment who needs a phone number for job applications and interview callbacks but lacks the credit history 
+                to qualify for traditional wireless plans.
+              </p>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                These scenarios represent real {cityName} residents whose lives improve dramatically through access to free 
+                government phone programs. Beyond basic connectivity, these programs enable:  economic mobility by allowing 
+                job seekers to search opportunities, submit applications, and participate in interviews; health management by 
+                providing access to telemedicine appointments, prescription reminders, and emergency services; educational 
+                advancement by connecting students to online learning resources, homework help, and school communications; 
+                and social connection by maintaining relationships with family and friends that combat isolation and depression.
+              </p>
+              
+              <div style={`border-color: ${designDNA.colors.primary}40;`} class="bg-white rounded-lg p-6 mt-6 border-2">
+                <h4 class="text-gray-900 font-bold text-lg mb-3 ">Program Statistics for {stateAbbr}</h4>
+                <ul class="space-y-2 text-sm text-gray-900">
+                  <li>✓ Over 9 million households nationwide benefit from Lifeline</li>
+                  <li>✓ ACP has enrolled more than 23 million households since launch</li>
+                  <li>✓ {stateAbbr} participates in both federal programs</li>
+                  <li>✓ Average household saves $480-720 annually on wireless costs</li>
+                  <li>✓ No geographic restrictions within {cityName} or {stateAbbr}</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Eligibility Section - Domain-based unique content -->
+          <section id="eligibility" class="mb-8 text-gray-900">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              {variations.headingQualifies}
+            </h2>
+            <p class="text-gray-900 text-[#6B7280] mb-6 ">
+              {variations.qualifiesIntro}
+            </p>
+            <ul class="space-y-3 text-[#6B7280] mb-6 text-gray-900">
+              <li class="text-gray-900 flex items-start">
+                <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                Participate in government assistance programs (Medicaid, SNAP, SSI, Federal Public Housing, etc.)
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                Household income is at or below 135% of the Federal Poverty Guidelines
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                Receive benefits from the National School Lunch Program or WIC
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                Participate in Tribal-specific programs (if applicable)
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                Receive a Federal Pell Grant in the current award year
+              </li>
+            </ul>
+            <p class="text-gray-900 text-[#6B7280] leading-relaxed">
+              <strong>Proof of eligibility</strong> is required during the application process. This can include benefit letters, 
+              pay stubs, or other official documentation showing your participation in qualifying programs or income level.
+            </p>
+          </section>
+
+          <!-- How to Apply Section - Domain-based unique content -->
+          <section id="how-to-apply" class="mb-16">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              {variations.headingHowTo}
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-gray-900">
+              <div class="text-center">
+                <div class="step-number mx-auto mb-4 text-gray-900">1</div>
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 ">{getH3Variation(`${DOMAIN}-${cityName}`, 'city-step-1').h3}</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm">
+                  {variations.step1}
+                </p>
+              </div>
+              <div class="text-center">
+                <div class="step-number mx-auto mb-4 text-gray-900">2</div>
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 ">{getH3Variation(`${DOMAIN}-${cityName}`, 'city-step-2').h3}</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm">
+                  {variations.step2}
+                </p>
+              </div>
+              <div class="text-center">
+                <div class="step-number mx-auto mb-4 text-gray-900">3</div>
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 ">{getH3Variation(`${DOMAIN}-${cityName}`, 'city-step-3').h3}</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm">
+                  {variations.step3}
+                </p>
+              </div>
+            </div>
+
+            <div class="bg-[#F8F9FA] rounded-lg p-6">
+              <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-4 ">Step 4: Receive Your Free Phone</h3>
+              <p class="text-gray-900 text-[#6B7280] leading-relaxed">
+                {variations.step4}
+              </p>
+            </div>
+          </section>
+
+          <!-- Providers Section - Domain-based unique content -->
+          <section id="providers" class="mb-16">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              {variations.headingProviders}
+            </h2>
+            <p class="text-gray-900 text-[#6B7280] mb-8 leading-relaxed">
+              Some of the top Lifeline and ACP providers serving <strong>{cityName}</strong> include:
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="card-hover p-6 flex flex-col items-center text-center">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 w-full">Assurance Wireless</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm mb-4 w-full">{variations.providerAssurance}</p>
+                <a href="/apply" class="btn-primary text-sm w-full text-center mt-auto">Apply Now</a>
+              </div>
+              <div class="card-hover p-6 flex flex-col items-center text-center">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 w-full">Safelink Wireless</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm mb-4 w-full">{variations.providerSafelink}</p>
+                <a href="/apply" class="btn-primary text-sm w-full text-center mt-auto">Apply Now</a>
+              </div>
+              <div class="card-hover p-6 flex flex-col items-center text-center">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 w-full">Q Link Wireless</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm mb-4 w-full">{variations.providerQlink}</p>
+                <a href="/apply" class="btn-primary text-sm w-full text-center mt-auto">Apply Now</a>
+              </div>
+              <div class="card-hover p-6 flex flex-col items-center text-center">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 w-full">enTouch Wireless</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm mb-4 w-full">{variations.providerEntouch}</p>
+                <a href="/apply" class="btn-primary text-sm w-full text-center mt-auto">Apply Now</a>
+              </div>
+            </div>
+            
+            <p class="text-gray-900 text-[#6B7280] mt-8 leading-relaxed">
+              Compare plans, coverage, and customer reviews to find the best fit for your needs in {cityName}. 
+              Each provider offers different benefits, so it's important to choose one that works well in your area.
+            </p>
+          </section>
+
+          <!-- Benefits Section - Domain-based unique content -->
+          <section id="benefits" class="mb-16">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              {variations.headingBenefits}
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="text-center">
+                <div class="feature-icon mx-auto mb-4 text-gray-900">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                  </svg>
+                </div>
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 ">{getH3Variation(`${DOMAIN}-${cityName}`, 'city-benefit-1').h3}</h3>
+                <ul class="text-[#6B7280] text-sm space-y-1">
+                  {variations.benefitsConnectivity.bullets.map((bullet) => (
+                    <li>• {bullet}</li>
+                  ))}
+                </ul>
+              </div>
+              <div class="text-center">
+                <div class="feature-icon mx-auto mb-4 text-gray-900">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                  </svg>
+                </div>
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 ">{getH3Variation(`${DOMAIN}-${cityName}`, 'city-benefit-2').h3}</h3>
+                <ul class="text-[#6B7280] text-sm space-y-1">
+                  {variations.benefitsNoCost.bullets.map((bullet) => (
+                    <li>• {bullet}</li>
+                  ))}
+                </ul>
+              </div>
+              <div class="text-center">
+                <div class="feature-icon mx-auto mb-4 text-gray-900">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                  </svg>
+                </div>
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-2 ">{getH3Variation(`${DOMAIN}-${cityName}`, 'city-benefit-3').h3}</h3>
+                <ul class="text-[#6B7280] text-sm space-y-1">
+                  {variations.benefitsEmergency.bullets.map((bullet) => (
+                    <li>• {bullet}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- LEGAL FRAMEWORK SECTION - SITE 1 ONLY -->
+          <section class="mb-16 bg-gray-50 rounded-xl p-6">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              Legal Framework & Consumer Protections in {cityName}
+            </h2>
+            
+            <div class="prose max-w-none">
+              <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mt-6 mb-4 ">
+                Federal Communications Commission (FCC) Oversight
+              </h3>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                The FCC maintains strict oversight over all Lifeline and ACP providers operating in {cityName}, {stateAbbr}. 
+                This federal regulatory agency enforces consumer protection rules, monitors service quality standards, investigates 
+                complaints, and can revoke provider authorization for violations. When you receive free government phone service 
+                in {cityName}, you're protected by the same consumer regulations that govern all telecommunications services in 
+                the United States.
+              </p>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                Key consumer protections include: prohibition against charging eligible customers for Lifeline service beyond 
+                the subsidized amount; requirements for transparent disclosure of plan terms, data limits, and any overage charges; 
+                protection against service disconnection without proper notice; right to file complaints with the FCC if providers 
+                violate program rules; and anti-fraud measures to prevent duplicate enrollment or identity theft.
+              </p>
+              
+              <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mt-8 mb-4 ">
+                State-Level Regulations in {stateAbbr}
+              </h3>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                While Lifeline and ACP are federal programs, {stateAbbr} maintains additional consumer protection laws that 
+                apply to all wireless service providers operating within state boundaries. These state regulations may provide 
+                extra protections beyond federal minimums, including requirements for customer service accessibility, billing 
+                dispute resolution procedures, and service quality standards specific to {stateAbbr} residents.
+              </p>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                {cityName} residents benefit from both federal and state consumer protection frameworks. If you experience 
+                issues with your free government phone service, you have multiple avenues for recourse: contacting your provider's 
+                customer service department, filing complaints with the FCC's Consumer Complaint Center, reporting issues to 
+                {stateAbbr} public utility commission or attorney general's office, and seeking assistance from local consumer 
+                advocacy organizations.
+              </p>
+              
+              <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mt-8 mb-4 ">
+                Privacy & Data Protection
+              </h3>
+              
+              <p class="text-gray-900 leading-relaxed mb-4 ">
+                Lifeline and ACP providers serving {cityName} must comply with federal privacy laws including the 
+                Telecommunications Act's Customer Proprietary Network Information (CPNI) rules. These regulations protect 
+                your personal information, call records, location data, and usage patterns. Providers cannot share your 
+                information with third parties without explicit consent, except as required by law or necessary for service 
+                provision.
+              </p>
+              
+              <div class="bg-white rounded-lg p-6 mt-6 border-2 border-gray-300">
+                <h4 class="text-gray-900 font-bold text-lg mb-3 ">Your Rights as a {cityName} Lifeline/ACP Customer</h4>
+                <ul class="space-y-2 text-sm text-gray-900">
+                  <li>✓ Receive service quality equivalent to regular paying customers</li>
+                  <li>✓ Keep your phone number if transferring from another provider</li>
+                  <li>✓ Access customer support through phone, email, and online chat</li>
+                  <li>✓ File complaints without fear of service retaliation</li>
+                  <li>✓ Switch providers if dissatisfied (once per year)</li>
+                  <li>✓ Receive clear information about data limits and policies</li>
+                  <li>✓ Protection from unauthorized charges or fees</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- FAQ Section - Domain-based unique content -->
+          <section id="faq" class="mb-16">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              {variations.headingFaq}
+            </h2>
+            
+            <div class="space-y-4">
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">How long does it take to get approved?</h3>
+                <p class="text-gray-900 text-[#6B7280]">
+                  {variations.faqApprovalTime}
+                </p>
+              </div>
+              
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">Can I keep my current phone number?</h3>
+                <p class="text-gray-900 text-[#6B7280]">
+                  {variations.faqKeepNumber}
+                </p>
+              </div>
+              
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">What documents do I need?</h3>
+                <p class="text-gray-900 text-[#6B7280]">
+                  {variations.faqDocuments}
+                </p>
+              </div>
+              
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">Is this program available to everyone in {cityName}?</h3>
+                <p class="text-gray-900 text-[#6B7280]">
+                  {variations.faqEveryoneEligible}
+                </p>
+              </div>
+              
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">What is the service quality like?</h3>
+                <p class="text-gray-900 text-[#6B7280]">
+                  {variations.faqServiceQuality}
+                </p>
+              </div>
+              
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">Can multiple people in my household get phones?</h3>
+                <p class="text-gray-900 text-[#6B7280]">
+                  {variations.faqMultiplePhones}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Contact Section -->
+          <section id="contact" class="mb-16">
+            <h2 class="text-gray-900 text-2xl font-bold text-[#22223B] mb-6 ">
+              Contact & Support
+            </h2>
+            <p class="text-gray-900 text-[#6B7280] mb-8 leading-relaxed">
+              For more information or help with your application in <strong>{cityName}, {stateAbbr}</strong>, contact:
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">Provider Support</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm mb-6 leading-relaxed">
+                  Contact your chosen provider directly for application assistance and service questions.
+                </p>
+                <a href="/providers" class="btn-primary text-sm inline-block text-center">View Providers</a>
+              </div>
+              <div class="card">
+                <h3 class="text-gray-900 text-lg font-bold text-[#22223B] mb-3 ">Program Support</h3>
+                <p class="text-gray-900 text-[#6B7280] text-sm mb-6 leading-relaxed">
+                  Get help with Lifeline and ACP program questions from official sources.
+                </p>
+                <a href="/contact" class="btn-primary text-sm inline-block text-center">Contact Us</a>
+              </div>
+            </div>
+          </section>
+
+          <!-- Final CTA - Domain-based unique content -->
+          <div class="rounded-lg p-6 text-white text-center" style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`}>
+            <h2 class="text-gray-900 text-2xl font-bold mb-4 ">{variations.cta.headline}</h2>
+            <p class="text-white/90 mb-6 text-gray-900">
+              {variations.cta.subtext}
+            </p>
+            <a href="/apply" class="btn-accent text-lg px-8 py-4 font-bold inline-block text-center">
+              {variations.cta.button}
+            </a>
+          </div>
+        </article>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="lg:col-span-1">
+        <!-- Quick Apply Widget -->
+        <div class="card-hover p-6 mb-8 text-gray-900">
+          <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mb-4 ">Quick Apply</h3>
+          <p class="text-gray-900 text-[#6B7280] mb-6 ">
+            Access federal communication assistance in {cityName} in just 2 minutes. No credit check required.
+          </p>
+          <a href="/apply" class="btn-accent w-full text-center block">
+            Apply Now
+          </a>
+        </div>
+
+        <!-- Eligibility Checker -->
+        <div class="card-hover p-6 mb-8 text-gray-900">
+          <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mb-4 ">Check Eligibility</h3>
+          <p class="text-gray-900 text-[#6B7280] mb-6 ">
+            See if you qualify for federal communication assistance in {cityName}.
+          </p>
+          <a href="/eligibility" class="btn-primary w-full text-center block">
+            Check Now
+          </a>
+        </div>
+
+        <!-- Related Links -->
+        <div class="card-hover p-6">
+          <h3 class="text-gray-900 text-xl font-bold text-[#22223B] mb-4 ">Related Links</h3>
+          <ul class="space-y-3">
+            <li><a href="/lifeline-program" class="text-[#6B7280] hover:opacity-80 transition-colors">Lifeline Program</a></li>
+            <li><a href="/acp-program" class="text-[#6B7280] hover:opacity-80 transition-colors">ACP Program</a></li>
+            <li><a href="/providers" class="text-[#6B7280] hover:opacity-80 transition-colors">Top Providers</a></li>
+            <li><a href="/faq" class="text-[#6B7280] hover:opacity-80 transition-colors">FAQ</a></li>
+            <li><a href="/contact" class="text-[#6B7280] hover:opacity-80 transition-colors">Contact Support</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Cities Section -->
+  {relatedCities && relatedCities.length > 0 && (
+    <RelatedCities 
+      cities={relatedCities}
+      stateName={stateName}
+      stateAbbreviation={stateAbbr}
+      currentCityName={cityName}
+      maxCities={6}
+    />
+  )}
+
+  <!-- Similar Cities in Other States -->
+  {similarCities && similarCities.length > 0 && (
+    <SimilarCities 
+      currentCityName={cityName}
+      currentStateAbbr={stateAbbr}
+      currentPopulation={population}
+      similarCities={similarCities}
+    />
+  )}
+
+  <!-- Related Content Section -->
+  <RelatedContent currentPage="city" currentState={stateAbbr} currentCity={cityName} />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <script type="application/ld+json" set:html={JSON.stringify(citySchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(providerSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(howToSchema)} />
+</Layout> 

@@ -1,0 +1,202 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const title = `${keyword} - Top Free Phone Providers | ${siteName}`;
+const description = "Compare the best free government phone providers. Find which companies offer free phones and service through Lifeline and ACP programs. Choose your provider today.";
+const canonicalURL = `${siteURL}/providers`;
+
+const jsonLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "Leading Free Government Phone Service Providers Comparison",
+      "description": "Complete guide to top providers offering free phones and cellular service through federal assistance programs",
+      "author": {
+        "@type": "Organization",
+        "name": siteName
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "url": canonicalURL
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Which providers offer the best free government phone plans?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Top providers include Assurance Wireless, SafeLink Wireless, and TruConnect. Each offers different phone models and data allowances, so compare their specific benefits before choosing."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I switch between free phone providers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can transfer your service by contacting your new provider. They'll handle the switch process, and you can keep your phone number when moving between companies."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I get a smartphone through government phone programs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, most major providers now offer Android smartphones with their free plans. Some providers also offer upgraded devices for a small monthly fee."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What's the difference between Lifeline and ACP providers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Many companies participate in both programs. Lifeline focuses on phone service while ACP provides internet discounts. Some providers bundle both benefits together."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to Select the Right Free Phone Provider",
+      "description": "Step-by-step process for choosing the best free government phone provider for your needs",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Review Coverage Areas",
+          "text": "Confirm the provider offers strong coverage in your area by checking their coverage map online or asking neighbors about their experience."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Compare Phone Options",
+          "text": "Look at what devices each provider offers. Some give basic phones while others provide smartphones with more features."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Check Data Allowances",
+          "text": "Review how much data, talk time, and texts each provider includes in their free plan to match your usage needs."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Contact Your Chosen Provider",
+          "text": "Reach out to your selected company to start the application process and schedule phone delivery or pickup."
+        }
+      ]
+    },
+    {
+      "@type": "Service",
+      "name": "Free Government Phone Provider Comparison",
+      "description": "Comprehensive comparison service helping users find the best free phone provider for their location and needs",
+      "provider": {
+        "@type": "Organization",
+        "name": siteName
+      },
+      "areaServed": "United States",
+      "serviceType": "Government Phone Provider Comparison"
+    }
+  ]
+};
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalURL} jsonLD={jsonLD}>
+  <nav class="bg-gray-50 border-b mb-8" aria-label="Breadcrumb">
+    <div class="max-w-4xl mx-auto px-4 py-3">
+      <ol class="flex items-center space-x-2 text-sm">
+        <li><a href="/" class="text-[var(--color-primary)] hover:underline">Home</a></li>
+        <li class="text-gray-500">›</li>
+        <li class="text-gray-700">Top Providers</li>
+      </ol>
+    </div>
+  </nav>
+
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Free Government Phone</h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">Compare leading providers offering free phones and service through federal assistance programs. Find the perfect match for your needs.</p>
+    </header>
+
+    <main>
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Finding Your Perfect Provider</h2>
+        <div class="prose prose-lg max-w-none">
+          <p>Choosing the right Free Government Phone provider makes all the difference in your experience. Different companies offer varying phone models, data amounts, and coverage areas. Government Phone helps you understand which providers serve your location best.</p>
+          
+          <p>Most people don't realize how many options exist. Major providers compete to offer better phones and more data through government programs. This competition benefits you with improved service and newer devices.</p>
+        </div>
+      </section>
+
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">Leading Free Phone Companies</h2>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-white rounded-lg shadow-md p-6 border">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Assurance Wireless</h3>
+            <ul class="space-y-2 text-gray-600 mb-4">
+              <li>• Free Android smartphones</li>
+              <li>• Unlimited talk and text</li>
+              <li>• Up to 10GB monthly data</li>
+              <li>• Nationwide coverage</li>
+            </ul>
+            <p class="text-sm text-gray-500">Virgin Mobile network</p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 border">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">SafeLink Wireless</h3>
+            <ul class="space-y-2 text-gray-600 mb-4">
+              <li>• Choice of phone models</li>
+              <li>• Flexible data plans</li>
+              <li>• Easy online management</li>
+              <li>• Quick activation</li>
+            </ul>
+            <p class="text-sm text-gray-500">TracFone network</p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 border">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">TruConnect</h3>
+            <ul class="space-y-2 text-gray-600 mb-4">
+              <li>• High-speed data included</li>
+              <li>• Modern smartphone options</li>
+              <li>• Customer support chat</li>
+              <li>• Multiple plan tiers</li>
+            </ul>
+            <p class="text-sm text-gray-500">T-Mobile network</p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 border">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Cintex Wireless</h3>
+            <ul class="space-y-2 text-gray-600 mb-4">
+              <li>• Regional coverage focus</li>
+              <li>• Personalized service</li>
+              <li>• Local support teams</li>
+              <li>• Competitive data limits</li>
+            </ul>
+            <p class="text-sm text-gray-500">Various networks</p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 border">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Life Wireless</h3>
+            <ul class="space-y-2 text-gray-600 mb-4">
+              <li>• Simple application process</li>
+              <li>• Basic and smartphone options</li>
+              <li>• Reliable network coverage</li>
+              <li>• No hidden fees</li>
+            </ul>
+            <p class="text-sm text-gray-500">Verizon network</p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 border">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Q Link Wireless</h3>
+            <ul class="space-y-2 text-gray-600 mb-4">
+              <li>• Fast approval process</li

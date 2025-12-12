@@ -1,0 +1,137 @@
+---
+/**
+ * Advanced Hero - Diagonal Variant
+ * Dramatic diagonal split design
+ */
+import { getSiteName, getKeyword, getDesignDNA, getDomain } from '../../lib/site-config';
+import { getContentVariations } from '../../lib/city-content-variations';
+import { getCTAVariation } from '../../lib/variations/shared/cta-variations';
+
+interface Props {
+  customH1?: string;
+}
+const { customH1 } = Astro.props;
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const content = getContentVariations(domain);
+const h1Text = customH1 || keyword;
+---
+
+<section class="relative min-h-[90vh] overflow-hidden">
+  <!-- Diagonal Background -->
+  <div class="absolute inset-0">
+    <div class="absolute inset-0" style={`background: ${designDNA.gradients.hero};`}></div>
+    <div class="absolute inset-0 clip-diagonal" style={`background: ${designDNA.colors.background};`}></div>
+  </div>
+  
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <!-- Left - On colored background -->
+      <div class="text-white lg:pr-8">
+        <div class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-6" style={`color: ${designDNA.colors.text};`}>
+          <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse" style={`color: ${designDNA.colors.text};`}></span>
+          {content.trustBadges[0]}
+        </div>
+        
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style="font-family: var(--font-heading);">
+          {h1Text}
+        </h1>
+        
+        <p class="text-xl mb-8 opacity-90 leading-relaxed" style={`color: ${designDNA.colors.text};`}>
+          {content.heroTagline}
+        </p>
+        
+        <!-- Horizontal Stats -->
+        <div class="flex gap-6 mb-8 pb-8 border-b border-white/20">
+          <div>
+            <div class="text-4xl font-bold">{content.heroStats.stat1.value}</div>
+            <div class="text-sm opacity-70">{content.heroStats.stat1.label}</div>
+          </div>
+          <div>
+            <div class="text-4xl font-bold" style={`color: ${designDNA.colors.accent};`}>{content.heroStats.stat2.value}</div>
+            <div class="text-sm opacity-70">{content.heroStats.stat2.label}</div>
+          </div>
+          <div>
+            <div class="text-4xl font-bold">{content.heroStats.stat3.value}</div>
+            <div class="text-sm opacity-70">{content.heroStats.stat3.label}</div>
+          </div>
+        </div>
+        
+        <a href="/apply" class="inline-flex items-center px-8 py-4 bg-white text-lg font-bold rounded-xl shadow-xl transform hover:scale-105 transition-all" style={`color: ${designDNA.colors.primary};`}>
+          {getCTAVariation(domain, "hero")}
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Right - On light background -->
+      <div class="lg:pl-16">
+        <div class="bg-white rounded-3xl shadow-2xl p-6" style={`border: 2px solid ${designDNA.colors.primary}20;`}>
+          <div class="text-center mb-8" style={`color: ${designDNA.colors.text};`}>
+            <div class="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4" style={`background: ${designDNA.gradients.primary};`}>
+              <span class="text-4xl text-white" style={`color: ${designDNA.colors.text};`}>{content.icons.phone}</span>
+            </div>
+            <h2 class="text-2xl font-bold mb-2" style={`color: ${designDNA.colors.text};`}>{siteName}</h2>
+            <p style={`color: ${designDNA.colors.text}70;`}>{content.footerTagline}</p>
+          </div>
+          
+          <!-- Feature List -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-4 p-4 rounded-xl" style={`background: ${designDNA.colors.primary}08;`}>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center" style={`background: ${designDNA.colors.primary}20;`}>
+                <span class="text-xl" style={`color: ${designDNA.colors.text};`}>{content.icons.check}</span>
+              </div>
+              <div>
+                <div class="font-semibold" style={`color: ${designDNA.colors.text};`}>{content.featureTitles.noCost}</div>
+                <div class="text-sm" style={`color: ${designDNA.colors.text}70;`}>{content.valueProps[0]}</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-4 p-4 rounded-xl" style={`background: ${designDNA.colors.accent}08;`}>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center" style={`background: ${designDNA.colors.accent}20;`}>
+                <span class="text-xl" style={`color: ${designDNA.colors.text};`}>{content.icons.speed}</span>
+              </div>
+              <div>
+                <div class="font-semibold" style={`color: ${designDNA.colors.text};`}>{content.featureTitles.connectivity}</div>
+                <div class="text-sm" style={`color: ${designDNA.colors.text}70;`}>{content.valueProps[1]}</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-4 p-4 rounded-xl" style={`background: ${designDNA.colors.secondary}08;`}>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center" style={`background: ${designDNA.colors.secondary}20;`}>
+                <span class="text-xl" style={`color: ${designDNA.colors.text};`}>{content.icons.support}</span>
+              </div>
+              <div>
+                <div class="font-semibold" style={`color: ${designDNA.colors.text};`}>{content.featureTitles.approval}</div>
+                <div class="text-sm" style={`color: ${designDNA.colors.text}70;`}>{content.valueProps[2]}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-8 pt-6 border-t text-center" style={`border-color: ${designDNA.colors.primary}20;`}>
+            <a href="/eligibility" class="font-semibold transition-colors" style={`color: ${designDNA.colors.primary};`}>
+              Check Your Eligibility →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .clip-diagonal {
+    clip-path: polygon(60% 0, 100% 0, 100% 100%, 40% 100%);
+  }
+  
+  @media (max-width: 1024px) {
+    .clip-diagonal {
+      clip-path: polygon(0 60%, 100% 40%, 100% 100%, 0 100%);
+    }
+  }
+</style>
+

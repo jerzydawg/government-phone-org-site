@@ -1,0 +1,70 @@
+---
+/**
+ * Browse by State Section
+ * Grid of all 50 states
+ */
+import { getDesignDNA, getKeyword, getDomain } from '../../lib/site-config';
+import { getStatesSectionVariations } from '../../lib/city-content-variations';
+
+const designDNA = getDesignDNA();
+const keyword = getKeyword();
+const domain = getDomain();
+const states = getStatesSectionVariations(domain);
+
+// All 50 states
+const allStates = [
+  { name: 'Alabama', abbr: 'AL' }, { name: 'Alaska', abbr: 'AK' }, { name: 'Arizona', abbr: 'AZ' },
+  { name: 'Arkansas', abbr: 'AR' }, { name: 'California', abbr: 'CA' }, { name: 'Colorado', abbr: 'CO' },
+  { name: 'Connecticut', abbr: 'CT' }, { name: 'Delaware', abbr: 'DE' }, { name: 'Florida', abbr: 'FL' },
+  { name: 'Georgia', abbr: 'GA' }, { name: 'Hawaii', abbr: 'HI' }, { name: 'Idaho', abbr: 'ID' },
+  { name: 'Illinois', abbr: 'IL' }, { name: 'Indiana', abbr: 'IN' }, { name: 'Iowa', abbr: 'IA' },
+  { name: 'Kansas', abbr: 'KS' }, { name: 'Kentucky', abbr: 'KY' }, { name: 'Louisiana', abbr: 'LA' },
+  { name: 'Maine', abbr: 'ME' }, { name: 'Maryland', abbr: 'MD' }, { name: 'Massachusetts', abbr: 'MA' },
+  { name: 'Michigan', abbr: 'MI' }, { name: 'Minnesota', abbr: 'MN' }, { name: 'Mississippi', abbr: 'MS' },
+  { name: 'Missouri', abbr: 'MO' }, { name: 'Montana', abbr: 'MT' }, { name: 'Nebraska', abbr: 'NE' },
+  { name: 'Nevada', abbr: 'NV' }, { name: 'New Hampshire', abbr: 'NH' }, { name: 'New Jersey', abbr: 'NJ' },
+  { name: 'New Mexico', abbr: 'NM' }, { name: 'New York', abbr: 'NY' }, { name: 'North Carolina', abbr: 'NC' },
+  { name: 'North Dakota', abbr: 'ND' }, { name: 'Ohio', abbr: 'OH' }, { name: 'Oklahoma', abbr: 'OK' },
+  { name: 'Oregon', abbr: 'OR' }, { name: 'Pennsylvania', abbr: 'PA' }, { name: 'Rhode Island', abbr: 'RI' },
+  { name: 'South Carolina', abbr: 'SC' }, { name: 'South Dakota', abbr: 'SD' }, { name: 'Tennessee', abbr: 'TN' },
+  { name: 'Texas', abbr: 'TX' }, { name: 'Utah', abbr: 'UT' }, { name: 'Vermont', abbr: 'VT' },
+  { name: 'Virginia', abbr: 'VA' }, { name: 'Washington', abbr: 'WA' }, { name: 'West Virginia', abbr: 'WV' },
+  { name: 'Wisconsin', abbr: 'WI' }, { name: 'Wyoming', abbr: 'WY' }, { name: 'District of Columbia', abbr: 'DC' }
+];
+---
+
+<section class="py-12 md:py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8 md:mb-12">
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4" style={`color: ${designDNA.colors.text};`}>
+        {states.sectionHeading}
+      </h2>
+      <p class="text-sm md:text-base max-w-2xl mx-auto px-4" style={`color: ${designDNA.colors.text};`}>
+        {states.description}
+      </p>
+    </div>
+    
+    <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2 sm:gap-3 mb-8" style={`color: ${designDNA.colors.text};`}>
+      {allStates.map((state) => (
+        <a 
+          href={`/${state.abbr.toLowerCase()}/`}
+          class="state-btn group flex flex-col items-center justify-center p-3 bg-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md border border-gray-200" style={`color: ${designDNA.colors.text};`}
+          title={`${keyword} in ${state.name}`}
+        >
+          <span class="font-bold text-lg group-hover:scale-110 transition-transform" style={`color: ${designDNA.colors.text};`}>{state.abbr}</span>
+        </a>
+      ))}
+    </div>
+    
+    <div class="text-center">
+      <a href="/states/" class="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition-colors" style={`background-color: ${designDNA.colors.primary};`}>
+        {states.ctaButton}
+        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+

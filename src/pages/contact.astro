@@ -1,0 +1,192 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AboveFoldCTA from '../components/AboveFoldCTA.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import RelatedContent from '../components/RelatedContent.astro';
+import { getSiteURL, getDomain, getKeywordId, getDesignDNA, getSiteName } from '../lib/site-config';
+import { loadKeywordVariations } from '../lib/variations/shared/keyword-loader';
+
+const SITE_URL = getSiteURL();
+const domain = getDomain();
+const keywordId = getKeywordId();
+const designDNA = getDesignDNA();
+const SITE_NAME = getSiteName();
+
+// Load keyword-specific variations with comprehensive error handling
+let metaContent = { title: 'Contact Us | Free Government Phone Support', description: 'Get help with your free government phone application and questions' };
+let h1Content = { h1: 'Contact Us' };
+
+try {
+  const keywordModule = await loadKeywordVariations(keywordId);
+  
+  if (keywordModule && typeof keywordModule.getH1Variation === 'function' && typeof keywordModule.getMetaVariations === 'function') {
+    try {
+      metaContent = keywordModule.getMetaVariations(SITE_NAME, domain, 'contact');
+      h1Content = keywordModule.getH1Variation(domain, 'contact');
+      
+      // Strict validation to prevent 'null' or 'undefined' literal strings
+      if (!metaContent || !metaContent.title || !metaContent.description ||
+          typeof metaContent.title !== 'string' || typeof metaContent.description !== 'string' ||
+          metaContent.title === 'null' || metaContent.title === 'undefined' ||
+          metaContent.description === 'null' || metaContent.description === 'undefined') {
+        metaContent = { title: 'Contact Us | Free Government Phone Support', description: 'Get help with your free government phone application and questions' };
+      }
+      if (!h1Content || !h1Content.h1 || typeof h1Content.h1 !== 'string' ||
+          h1Content.h1.trim() === '' || h1Content.h1 === 'null' || h1Content.h1 === 'undefined') {
+        h1Content = { h1: 'Contact Us' };
+      }
+    } catch (variationError: any) {
+      console.error('Error calling variation functions:', variationError?.message || variationError);
+      // Use fallback values already set above
+    }
+  } else {
+    console.warn('Variation functions not available, using fallback content');
+  }
+} catch (e: any) {
+  console.error('Failed to load keyword variations for contact page:', e?.message || e);
+  // Use fallback values already set above - page will still render
+}
+
+// Dynamic SEO Meta Tags from keyword variations (or fallback)
+const title = metaContent.title;
+const description = metaContent.description;
+const canonicalURL = `${SITE_URL}/contact/`;
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalURL}>
+  <Breadcrumbs items={[
+    { label: 'Home', href: '/' },
+    { label: 'Contact', href: '/contact' }
+  ]} />
+  <main class="min-h-screen">
+    <!-- Hero Section -->
+    <section style={`background: linear-gradient(135deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.primaryDark || designDNA.colors.primary} 100%);`} class="text-white py-8">
+      <div class="container mx-auto px-4 text-center">
+        <h1 class="text-gray-900 text-4xl md:text-6xl font-bold mb-6 ">
+          {h1Content.h1}
+        </h1>
+        <p class="text-gray-900 text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+          Get help with your free government phone application, eligibility questions, and program information. 
+          Our support team is here to assist you with federal communication assistance programs.
+        </p>
+      </div>
+    </section>
+
+    <!-- CTA Above Fold -->
+    <div class="bg-white">
+      <AboveFoldCTA context="contact" />
+    </div>
+
+    <!-- Contact Information Section -->
+    <section class="py-10 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-gray-900 text-2xl font-bold mb-4">How Can We Help?</h2>
+            <p class="text-gray-900 mb-4">
+              If you have questions about free government phone programs, need assistance with your application, 
+              or want to learn more about eligibility requirements, we're here to help. Our support team can 
+              assist with questions about Lifeline, ACP, and other federal communication assistance programs.
+            </p>
+            <p class="text-gray-900 mb-4">
+              Before contacting us, you may find answers to common questions on our <a href="/faq" style={`color: ${designDNA.colors.primary};`} class="hover:underline">FAQ page</a>. 
+              For immediate assistance with your application, you can <a href="/apply" class="text-green-600 hover:underline font-semibold">start your application online</a> 
+              or check your <a href="/eligibility" style={`color: ${designDNA.colors.primary};`} class="hover:underline">eligibility status</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Options -->
+    <section class="py-10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          <div class="grid md:grid-cols-2 gap-6">
+            <!-- Application Help -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+              <h3 class="text-gray-900 text-xl font-bold mb-4" style={`color: ${designDNA.colors.primary};`}>
+                Application Assistance
+              </h3>
+              <p class="text-gray-900 mb-4">
+                Need help completing your free government phone application? Our step-by-step application process 
+                makes it easy to apply online in just a few minutes.
+              </p>
+              <a href="/apply" class="inline-block py-3 px-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300" style={`background: ${designDNA.colors.primary}; color: white;`}>
+                Start Application
+              </a>
+            </div>
+
+            <!-- Eligibility Questions -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+              <h3 class="text-gray-900 text-xl font-bold mb-4" style={`color: ${designDNA.colors.accent};`}>
+                Eligibility Questions
+              </h3>
+              <p class="text-gray-900 mb-4">
+                Not sure if you qualify for free government phone benefits? Check your eligibility instantly 
+                using our online eligibility checker.
+              </p>
+              <a href="/eligibility" class="inline-block py-3 px-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300" style={`background: ${designDNA.colors.accent}; color: white;`}>
+                Check Eligibility
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Link -->
+    <section class="py-10 bg-gray-50">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-gray-900 text-3xl md:text-4xl font-bold mb-6 ">
+          Common Questions
+        </h2>
+        <p class="text-gray-900 text-xl mb-8 max-w-2xl mx-auto">
+          Find answers to frequently asked questions about free government phone programs, eligibility, 
+          application process, and program benefits.
+        </p>
+        <div class="flex justify-center">
+          <a href="/faq" class="inline-block py-4 px-10 text-lg font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 active:scale-95 transition-all duration-300" style={`background: linear-gradient(135deg, ${designDNA.colors.accent} 0%, ${designDNA.colors.accentDark || designDNA.colors.accent} 100%); color: white;`}>
+            View FAQ
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Links -->
+    <section class="py-10">
+      <div class="container mx-auto px-4">
+        <h2 class="text-gray-900 text-3xl md:text-4xl font-bold text-center mb-8 ">
+          Related Resources
+        </h2>
+        <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <a href="/programs" class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300 text-center">
+            <div class="text-3xl mb-4 text-gray-900" style={`color: ${designDNA.colors.primary};`}>📋</div>
+            <h3 class="text-gray-900 text-lg font-bold mb-2 ">Program Guide</h3>
+            <p class="text-gray-900">
+              Learn about Lifeline and ACP programs and their benefits.
+            </p>
+          </a>
+          <a href="/providers" class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300 text-center">
+            <div class="text-purple-600 text-3xl mb-4" aria-label="Phone icon">📱</div>
+            <h3 class="text-gray-900 text-lg font-bold mb-2 ">Compare Providers</h3>
+            <p class="text-gray-900">
+              Find the best provider for your needs and location.
+            </p>
+          </a>
+          <a href="/eligibility" class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300 text-center">
+            <div class="text-green-600 text-3xl mb-4 text-gray-900">✅</div>
+            <h3 class="text-gray-900 text-lg font-bold mb-2 ">Check Eligibility</h3>
+            <p class="text-gray-900">
+              Use our quick eligibility checker to see if you qualify.
+            </p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Content Section -->
+    <RelatedContent currentPage="contact" />
+  </main>
+</Layout>
+

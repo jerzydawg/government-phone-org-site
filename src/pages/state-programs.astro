@@ -1,0 +1,179 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const title = `${keyword} - State Programs & Benefits | ${siteName}`;
+const description = `Find ${keyword} programs in your state. Check eligibility, compare providers, and get free phone service through state-specific assistance programs.`;
+const canonicalURL = `${siteURL}/state-programs`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "State-Specific Free Government Phone Programs and Benefits",
+      "description": "Complete guide to accessing free phone programs through state assistance, including eligibility requirements and application processes.",
+      "author": {
+        "@type": "Organization",
+        "name": siteName
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "url": canonicalURL
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to Access Free Phone Programs in Your State",
+      "description": "Step-by-step process for obtaining free government phones through state programs.",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Verify State Eligibility",
+          "text": "Review your state's specific requirements for free phone programs, as guidelines vary by location."
+        },
+        {
+          "@type": "HowToStep", 
+          "name": "Collect Required Documentation",
+          "text": "Gather proof of income, benefits participation, or other qualifying documents needed for your state."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Contact Approved Providers",
+          "text": "Reach out to Lifeline carriers operating in your state to begin the application process."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Your Application",
+          "text": "Complete the application with your chosen provider and provide all necessary documentation."
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do free phone programs differ between states?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "While Lifeline is federal, states may have additional programs or enhanced benefits. Some states offer extra minutes, data, or expanded eligibility criteria beyond the federal requirements."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I transfer my free phone service if I move states?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, your Lifeline benefit transfers with you. Contact your provider before moving to ensure service continuity and verify your new address meets program requirements."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which states have the most providers for free phones?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Large states like California, Texas, Florida, and New York typically have the most Lifeline providers. Rural states may have fewer options but still provide adequate coverage."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are there income limits that vary by state for free phones?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Federal Lifeline uses national poverty guidelines, but some states supplement with additional income thresholds or accept state-specific assistance programs as qualification criteria."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "GovernmentService",
+      "name": "State Free Government Phone Programs",
+      "description": "State-administered and federally supported programs providing free cell phones and service to eligible low-income residents.",
+      "provider": {
+        "@type": "GovernmentOrganization",
+        "name": "Federal Communications Commission"
+      },
+      "serviceType": "Telecommunications Assistance",
+      "areaServed": "United States"
+    }
+  ]
+};
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalURL} jsonLd={jsonLd}>
+  <nav aria-label="Breadcrumb" class="mb-8">
+    <ol class="flex space-x-2 text-sm text-gray-600">
+      <li><a href="/" class="text-[var(--color-primary)] hover:underline">Home</a></li>
+      <li><span class="mx-2">›</span></li>
+      <li class="text-gray-900 font-medium">State Programs</li>
+    </ol>
+  </nav>
+
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Free Government Phone</h1>
+      <p class="text-xl text-gray-700 max-w-3xl mx-auto">
+        Every state offers free phone programs to help eligible residents stay connected. Find out how to get your free phone through state-specific assistance programs.
+      </p>
+    </header>
+
+    <div class="prose prose-lg max-w-none">
+      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 mb-10 border border-blue-100">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Get Free Phone Service Through Your State</h2>
+        <p class="mb-6">
+          Your state makes it easier than ever to access a Free Government Phone through federal and local assistance programs. Whether you receive SNAP, Medicaid, or other benefits, you can get connected without paying monthly fees or activation costs.
+        </p>
+        <p class="mb-6">
+          Each state works with approved wireless providers to deliver free phones and service plans. The process is straightforward - check your eligibility, choose a provider operating in your area, and submit your application with required documentation.
+        </p>
+        <div class="text-center">
+          <a href="/apply" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg inline-block">
+            VERIFY ELIGIBILITY NOW
+          </a>
+          <p class="text-sm text-gray-600 mt-3">Check qualification status in under 60 seconds</p>
+        </div>
+      </div>
+
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">How to Access Free Phones in Your State</h2>
+      <p class="mb-6">
+        Getting connected through your state's Free Government Phone program involves four simple steps. Most applicants complete the process within one week and receive their device shortly after approval.
+      </p>
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mb-4" style="background-color: var(--color-primary)">1</div>
+          <h3 class="text-lg font-semibold mb-3">Verify State Eligibility</h3>
+          <p>Review your state's specific requirements for free phone programs, as guidelines vary by location.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mb-4" style="background-color: var(--color-primary)">2</div>
+          <h3 class="text-lg font-semibold mb-3">Collect Required Documentation</h3>
+          <p>Gather proof of income, benefits participation, or other qualifying documents needed for your state.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mb-4" style="background-color: var(--color-primary)">3</div>
+          <h3 class="text-lg font-semibold mb-3">Contact Approved Providers</h3>
+          <p>Reach out to Lifeline carriers operating in your state to begin the application process.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mb-4" style="background-color: var(--color-primary)">4</div>
+          <h3 class="text-lg font-semibold mb-3">Submit Your Application</h3>
+          <p>Complete the application with your chosen provider and provide all necessary documentation.</p>
+        </div>
+      </div>
+
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">What Your State Program Includes</h2>
+      <p class="mb-6">
+        State Free Government Phone programs provide comprehensive communication solutions at zero cost to eligible households. Your benefits package includes everything needed to stay connected with family, employers, healthcare providers, and emergency services.
+      </p>
+      <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-8">
+        <h3 class="text-lg font-semibold text-green

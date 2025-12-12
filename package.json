@@ -1,0 +1,46 @@
+{
+  "name": "govprogram",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "generate-sitemap": "node scripts/generate-sitemap.js",
+    "generate-city-pages": "node scripts/generate-city-pages.js",
+    "seed-cities": "node scripts/seed-cities.js",
+    "seed-all-cities": "node scripts/seed-all-cities.js",
+    "update-sitemap-pages": "node scripts/update-sitemap-pages.js",
+    "generate-subdomain-urls": "node scripts/generate-subdomain-urls.js",
+    "test-subdomains": "node scripts/test-subdomains.js"
+  },
+  "dependencies": {
+    "@astrojs/tailwind": "^5.1.0",
+    "@astrojs/vercel": "8.2.5",
+    "@supabase/supabase-js": "^2.39.7",
+    "astro": "^5.11.0",
+    "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
+    "cheerio": "^1.1.0",
+    "dotenv": "^16.6.1",
+    "hex-lite": "^1.5.0",
+    "node-fetch": "^2.7.0",
+    "react": "^19.1.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@fullhuman/postcss-purgecss": "^7.0.2",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "lighthouse": "^12.8.0",
+    "tailwindcss": "^3.4.0",
+    "terser": "^5.43.1",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

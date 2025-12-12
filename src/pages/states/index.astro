@@ -1,0 +1,175 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const title = `${keyword} by State - Find Local Programs | ${siteName}`;
+const description = `Find Free Government Phone programs available in your state. Complete directory of Lifeline and ACP services with state-specific eligibility requirements and local providers.`;
+
+const states = [
+  { name: 'Alabama', code: 'AL', slug: 'alabama' },
+  { name: 'Alaska', code: 'AK', slug: 'alaska' },
+  { name: 'Arizona', code: 'AZ', slug: 'arizona' },
+  { name: 'Arkansas', code: 'AR', slug: 'arkansas' },
+  { name: 'California', code: 'CA', slug: 'california' },
+  { name: 'Colorado', code: 'CO', slug: 'colorado' },
+  { name: 'Connecticut', code: 'CT', slug: 'connecticut' },
+  { name: 'Delaware', code: 'DE', slug: 'delaware' },
+  { name: 'Florida', code: 'FL', slug: 'florida' },
+  { name: 'Georgia', code: 'GA', slug: 'georgia' },
+  { name: 'Hawaii', code: 'HI', slug: 'hawaii' },
+  { name: 'Idaho', code: 'ID', slug: 'idaho' },
+  { name: 'Illinois', code: 'IL', slug: 'illinois' },
+  { name: 'Indiana', code: 'IN', slug: 'indiana' },
+  { name: 'Iowa', code: 'IA', slug: 'iowa' },
+  { name: 'Kansas', code: 'KS', slug: 'kansas' },
+  { name: 'Kentucky', code: 'KY', slug: 'kentucky' },
+  { name: 'Louisiana', code: 'LA', slug: 'louisiana' },
+  { name: 'Maine', code: 'ME', slug: 'maine' },
+  { name: 'Maryland', code: 'MD', slug: 'maryland' },
+  { name: 'Massachusetts', code: 'MA', slug: 'massachusetts' },
+  { name: 'Michigan', code: 'MI', slug: 'michigan' },
+  { name: 'Minnesota', code: 'MN', slug: 'minnesota' },
+  { name: 'Mississippi', code: 'MS', slug: 'mississippi' },
+  { name: 'Missouri', code: 'MO', slug: 'missouri' },
+  { name: 'Montana', code: 'MT', slug: 'montana' },
+  { name: 'Nebraska', code: 'NE', slug: 'nebraska' },
+  { name: 'Nevada', code: 'NV', slug: 'nevada' },
+  { name: 'New Hampshire', code: 'NH', slug: 'new-hampshire' },
+  { name: 'New Jersey', code: 'NJ', slug: 'new-jersey' },
+  { name: 'New Mexico', code: 'NM', slug: 'new-mexico' },
+  { name: 'New York', code: 'NY', slug: 'new-york' },
+  { name: 'North Carolina', code: 'NC', slug: 'north-carolina' },
+  { name: 'North Dakota', code: 'ND', slug: 'north-dakota' },
+  { name: 'Ohio', code: 'OH', slug: 'ohio' },
+  { name: 'Oklahoma', code: 'OK', slug: 'oklahoma' },
+  { name: 'Oregon', code: 'OR', slug: 'oregon' },
+  { name: 'Pennsylvania', code: 'PA', slug: 'pennsylvania' },
+  { name: 'Rhode Island', code: 'RI', slug: 'rhode-island' },
+  { name: 'South Carolina', code: 'SC', slug: 'south-carolina' },
+  { name: 'South Dakota', code: 'SD', slug: 'south-dakota' },
+  { name: 'Tennessee', code: 'TN', slug: 'tennessee' },
+  { name: 'Texas', code: 'TX', slug: 'texas' },
+  { name: 'Utah', code: 'UT', slug: 'utah' },
+  { name: 'Vermont', code: 'VT', slug: 'vermont' },
+  { name: 'Virginia', code: 'VA', slug: 'virginia' },
+  { name: 'Washington', code: 'WA', slug: 'washington' },
+  { name: 'West Virginia', code: 'WV', slug: 'west-virginia' },
+  { name: 'Wisconsin', code: 'WI', slug: 'wisconsin' },
+  { name: 'Wyoming', code: 'WY', slug: 'wyoming' }
+];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "State Directory for Free Government Phone Programs",
+      "description": "Complete guide to finding free government phone services in every state with local provider information and eligibility requirements.",
+      "author": {
+        "@type": "Organization",
+        "name": siteName
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do free phone programs vary between different states?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, while Lifeline and ACP are federal programs available nationwide, each state may have additional local programs, different approved providers, and varying application processes."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use my free government phone when traveling to other states?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Your free government phone typically works nationwide, but some providers may have regional limitations or different service coverage areas across state boundaries."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens to my free phone service if I move states?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can usually keep your service when moving, but you'll need to update your address with your provider and may need to switch to a new provider depending on coverage areas."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to Locate Free Government Phone Programs in Your State",
+      "description": "Step-by-step process to find and access free government phone services available in your specific state.",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Locate Your State",
+          "text": "Find your state from the complete directory below to access specific program information and local provider details."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Review Local Options",
+          "text": "Examine the available providers and services in your state, as coverage and benefits may differ between regions."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Confirm Qualification",
+          "text": "Check your eligibility for both federal programs and any additional state-specific assistance that may be available."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Application",
+          "text": "Complete the application process through your chosen provider or the state's designated application system."
+        }
+      ]
+    },
+    {
+      "@type": "GovernmentService",
+      "name": "State-Based Free Government Phone Directory",
+      "description": "Complete listing of free government phone programs organized by state with local provider and eligibility information.",
+      "serviceType": "Telecommunications Assistance",
+      "provider": {
+        "@type": "Organization",
+        "name": "Federal Communications Commission"
+      },
+      "areaServed": "United States",
+      "audience": {
+        "@type": "Audience",
+        "name": "Low-income households and qualifying individuals"
+      }
+    }
+  ]
+};
+---
+
+<Layout title={title} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <!-- Breadcrumb -->
+    <div class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <nav class="text-sm" aria-label="Breadcrumb">
+          <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+              <a href="/" class="text-gray-700 hover:text-[var(--color-primary)]">Home</a>
+            </li>
+            <li>
+              <div class="flex items-center">
+                <svg class="w-4 h-4 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10

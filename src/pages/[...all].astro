@@ -1,0 +1,56 @@
+---
+export const prerender = false;
+import Layout from '../layouts/Layout.astro';
+import { createClient } from '../lib/supabase';
+import { getDesignDNA, getSiteURL, getSiteName } from '../lib/site-config';
+const designDNA = getDesignDNA();
+const siteURL = getSiteURL();
+const siteName = getSiteName();
+
+const title = `Redirecting... | ${siteName}`;
+const description = `Redirecting to the correct page.`;
+const canonicalURL = `${siteURL}/`;
+
+// Get the full path from URL params
+const { all } = Astro.params;
+const pathSegments = all?.split('/').filter(Boolean) || [];
+
+// Only handle city routes, not the main site
+if (pathSegments.length === 1 && pathSegments[0] !== '') {
+  const citySlug = pathSegments[0];
+  const cityName = citySlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  
+  try {
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+    const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Try to find the city in the database
+      const { data: cityData, error } = await supabase
+        .from('cities')
+        .select('*,states(abbreviation)')
+        .eq('name', cityName)
+        .order('population', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (cityData && cityData.states?.abbreviation) {
+        // Redirect to the proper state/city format
+        const stateSlug = cityData.states.abbreviation.toLowerCase();
+        const properCitySlug = cityData.name.toLowerCase().replace(/\s+/g, '-');
+        return Astro.redirect(`/${stateSlug}/${properCitySlug}/`);
+      }
+    }
+  } catch (error) {
+    console.error('Error looking up city:', error);
+  }
+}
+
+// If we get here, it's not a recognized city or there was an error
+// Redirect to 404
+return Astro.redirect('/404');
+---
+
+<!-- This page should never render as it always redirects -->

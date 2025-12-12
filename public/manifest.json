@@ -1,0 +1,22 @@
+{
+  "name": "Free Government Phone | Apply Online Today",
+  "short_name": "Gov Phone",
+  "description": "Get FREE phone service through government programs. Check your eligibility in 2 minutes. No cost, no hidden fees, FCC approved.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "utilities", "social"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
+

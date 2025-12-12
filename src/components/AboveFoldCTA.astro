@@ -1,0 +1,39 @@
+---
+import { getDesignDNA, getDomain } from '../lib/site-config';
+import { getCTAVariation } from '../lib/variations/shared/cta-variations';
+
+interface Props {
+  context?: string;
+  href?: string;
+  size?: 'small' | 'medium' | 'large';
+}
+
+const { 
+  context = 'default',
+  href = '/apply',
+  size = 'large'
+} = Astro.props;
+
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const ctaText = getCTAVariation(domain, context);
+
+const sizeClasses = {
+  small: 'py-2 px-6 text-sm',
+  medium: 'py-3 px-8 text-base',
+  large: 'py-4 px-10 text-lg font-bold'
+};
+---
+
+<div class="mt-8 mb-6 px-4 md:px-0 text-center animate-fade-in">
+  <a 
+    href={href} 
+    class={`block md:inline-block w-full md:w-auto max-w-md md:max-w-none mx-auto rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 active:scale-95 transition-all duration-300 ${sizeClasses[size]}`}
+    style={`background: linear-gradient(135deg, ${designDNA.colors.accent} 0%, ${designDNA.colors.accentDark || designDNA.colors.accent} 100%); color: white;`}
+  >
+    {ctaText}
+  </a>
+  <p class="text-xs md:text-sm text-white font-medium mt-4" style={`color: ${designDNA.colors.text};`}>✓ No credit check • ✓ Takes 2 minutes • ✓ Free forever</p>
+</div>
+
+

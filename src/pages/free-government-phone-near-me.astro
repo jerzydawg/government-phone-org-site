@@ -1,0 +1,505 @@
+---
+export const prerender = false;
+import Layout from '../layouts/Layout.astro';
+import { createClient } from '../lib/supabase';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import RelatedContent from '../components/RelatedContent.astro';
+import { getSiteURL, getDomain, getDesignDNA } from '../lib/site-config';
+
+const designDNA = getDesignDNA();
+
+const SITE_URL = getSiteURL();
+const DOMAIN = getDomain();
+
+// SEO Meta Data
+const title = "Free Government Phone Near Me | Find Local Providers 2025";
+const description = "Find free government phone service near you. Locate local providers, check eligibility, and apply for Lifeline & ACP programs. Get your free phone today - no credit check required.";
+const seoKeywords = "free government phone near me, government phone providers near me, free phone service locations, Lifeline providers near me, ACP providers near me, free phone application near me";
+const canonicalURL = `${SITE_URL}/free-government-phone-near-me/`;
+
+// Structured Data
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Free Government Phone Service Near Me",
+  "description": "Find local providers for free government phone service through Lifeline and ACP programs",
+  "url": canonicalUrl,
+  "provider": {
+    "@type": "Organization",
+    "name": DOMAIN,
+    "url": SITE_URL
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "United States"
+  },
+  "serviceType": "Free Government Phone Service",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free government phone service for eligible individuals"
+  }
+};
+
+// Initialize Supabase client
+let supabase;
+let states = [];
+let providers = [];
+
+try {
+  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Fetch states for location-based content
+    const { data: statesData, error: statesError } = await supabase
+      .from('states')
+      .select('id, name, abbreviation')
+      .order('name');
+    
+    if (!statesError && statesData) {
+      states = statesData;
+    }
+    
+    // Fetch providers for local service information
+    const { data: providersData, error: providersError } = await supabase
+      .from('providers')
+      .select('id, name, coverage, contact_info')
+      .limit(10);
+    
+    if (!providersError && providersData) {
+      providers = providersData;
+    }
+  }
+} catch (error) {
+  console.error('Supabase connection error:', error);
+}
+---
+
+<Layout 
+  title={title}
+  description={description}
+  keywords={seoKeywords}
+  canonicalURL={canonicalURL}
+>
+  <Breadcrumbs 
+    items={[
+      { text: 'Home', url: '/' },
+      { text: 'Free Government Phone Near Me', url: '/free-government-phone-near-me/' }
+    ]}
+  />
+
+  <!-- Hero Section -->
+  <section class="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h1 class="text-gray-900 text-4xl md:text-5xl font-bold mb-6 ">
+          Free Government Phone Near Me
+        </h1>
+        <p class="text-gray-900 text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+          Discover local providers offering free government phone service in your area. 
+          Stop paying hundreds for phone bills - get connected for free today.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/apply" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition-colors">
+            Find Local Providers →
+          </a>
+          <a href="/eligibility" class="border-2 border-white hover:bg-white hover:text-blue-800 text-white font-bold py-4 px-8 rounded-lg text-lg transition-colors">
+            Check My Eligibility
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        <div>
+          <div class="text-3xl font-bold text-blue-600 mb-2 text-gray-900">2.8M+</div>
+          <div class="text-gray-900">Americans Connected</div>
+        </div>
+        <div>
+          <div class="text-3xl font-bold text-blue-600 mb-2 text-gray-900">98%</div>
+          <div class="text-gray-900">Approval Rate</div>
+        </div>
+        <div>
+          <div class="text-3xl font-bold text-blue-600 mb-2 text-gray-900">$360</div>
+          <div class="text-gray-900">Yearly Savings</div>
+        </div>
+        <div>
+          <div class="text-3xl font-bold text-blue-600 mb-2 text-gray-900">2 min</div>
+          <div class="text-gray-900">Quick Check</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="py-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- What is Free Government Phone Service -->
+      <div class="mb-16">
+        <h2 class="text-gray-900 text-3xl font-bold mb-8 ">
+          What is Free Government Phone Service Near Me?
+        </h2>
+        
+        <p class="text-gray-900 text-lg mb-8 ">
+          Free government phone service is a federal program that provides eligible Americans with free smartphones and monthly service plans. This includes unlimited talk, text, and data - all at zero cost to you. The program is designed to ensure everyone has access to essential communication services, regardless of their financial situation.
+        </p>
+
+        <div class="bg-blue-50 p-6 rounded-lg mb-8 text-gray-900">
+          <h3 class="text-gray-900 text-xl font-semibold text-blue-800 mb-4 ">🎯 Two Main Programs Available:</h3>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="text-gray-900 font-semibold text-blue-800 mb-2 ">Lifeline Program</h4>
+              <p class="text-blue-700 text-sm">The original government program providing basic phone service to low-income households.</p>
+            </div>
+            <div>
+              <h4 class="text-gray-900 font-semibold text-blue-800 mb-2 ">Affordable Connectivity Program (ACP)</h4>
+              <p class="text-blue-700 text-sm">Enhanced program offering more data and better service options for eligible families.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How to Find Local Providers -->
+      <div class="mb-16">
+        <h2 class="text-gray-900 text-3xl font-bold mb-8 ">
+          How to Find Free Government Phone Providers Near Me
+        </h2>
+        
+        <div class="space-y-4">
+          <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+            <h3 class="text-gray-900 text-xl font-semibold text-blue-600 mb-4">📍 Method 1: Online Provider Directory</h3>
+            <p class="text-gray-900 mb-4 ">
+              The easiest way to find local providers is through online directories. These platforms show you all available providers in your zip code, along with their coverage areas and plan details.
+            </p>
+            <ul class="list-disc list-inside text-gray-900 space-y-2">
+              <li>Enter your zip code to see local options</li>
+              <li>Compare coverage maps and service quality</li>
+              <li>Read customer reviews and ratings</li>
+              <li>Check device availability and plan features</li>
+            </ul>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+            <h3 class="text-gray-900 text-xl font-semibold text-green-600 mb-4">🏢 Method 2: Contact Major Carriers</h3>
+            <p class="text-gray-900 mb-4 ">
+              Many major wireless carriers participate in government programs. Contact them directly to ask about their Lifeline and ACP offerings.
+            </p>
+            <ul class="list-disc list-inside text-gray-900 space-y-2">
+              <li>AT&T, Verizon, T-Mobile, and Sprint all participate</li>
+              <li>Visit their local stores for in-person assistance</li>
+              <li>Call their customer service for program details</li>
+              <li>Check their websites for online applications</li>
+            </ul>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+            <h3 class="text-gray-900 text-xl font-semibold text-purple-600 mb-4 ">📞 Method 3: State Resources</h3>
+            <p class="text-gray-900 mb-4 ">
+              Your state government maintains lists of approved providers and can help you find local options.
+            </p>
+            <ul class="list-disc list-inside text-gray-900 space-y-2">
+              <li>Contact your state's Public Utility Commission</li>
+              <li>Visit your state's Department of Social Services</li>
+              <li>Check with local community action agencies</li>
+              <li>Ask at your local library or community center</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Local Provider Showcase -->
+      <div class="mb-16">
+        <h2 class="text-gray-900 text-3xl font-bold mb-8 ">
+          Popular Local Providers Near Me
+        </h2>
+        
+        <p class="text-gray-900 text-lg mb-8 ">
+          These trusted providers offer free government phone service across the United States. Each provider has different coverage areas, so availability may vary by location.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-8 text-gray-900">
+          {providers.slice(0, 6).map(provider => (
+            <div class="bg-white p-6 rounded-lg shadow-md border hover:shadow-lg transition-shadow">
+              <h4 class="text-gray-900 font-semibold mb-2 ">{provider.name}</h4>
+              <p class="text-gray-900 text-sm mb-3 ">Government-approved provider</p>
+              <div class="flex items-center text-sm text-blue-600">
+                <span class="text-gray-900 mr-2">📱</span>
+                <span>Free smartphone included</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+          <h3 class="text-gray-900 text-xl font-semibold text-yellow-800 mb-4 ">💡 Pro Tip: Provider Selection</h3>
+          <p class="text-yellow-800 mb-4 text-gray-900">
+            When choosing a provider, consider these factors:
+          </p>
+          <ul class="list-disc list-inside text-yellow-800 space-y-2">
+            <li><strong>Coverage:</strong> Check if they have strong signal in your area</li>
+            <li><strong>Data Allowance:</strong> Compare monthly data limits</li>
+            <li><strong>Device Quality:</strong> Some providers offer better smartphones</li>
+            <li><strong>Customer Service:</strong> Read reviews about their support quality</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- State-by-State Guide -->
+      <div class="mb-16">
+        <h2 class="text-gray-900 text-3xl font-bold mb-8 ">
+          Free Government Phone Service by State
+        </h2>
+        
+        <p class="text-gray-900 text-lg mb-8 ">
+          Government phone service availability varies by state. Some states offer additional benefits beyond the federal programs. Click on your state to see specific providers and requirements.
+        </p>
+
+        <div class="grid md:grid-cols-3 gap-4 mb-8 text-gray-900">
+          {states.slice(0, 9).map(state => (
+            <div class="bg-white p-4 rounded-lg shadow border hover:shadow-md transition-shadow">
+              <h4 class="text-gray-900 font-semibold mb-2 ">{state.name}</h4>
+              <a href={`/${state.abbreviation.toLowerCase()}/`} class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                <span>View {state.name} Providers</span>
+                <span class="text-gray-900 ml-1">→</span>
+              </a>
+            </div>
+          ))}
+        </div>
+
+        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+          <h3 class="text-gray-900 text-xl font-semibold text-blue-800 mb-4 ">🏛️ State-Specific Programs</h3>
+          <p class="text-blue-800">
+            Many states offer additional assistance programs beyond the federal Lifeline and ACP. These can include extra benefits, higher income limits, or additional provider options. Contact your state's Public Utility Commission for complete information about programs available in your area.
+          </p>
+        </div>
+      </div>
+
+      <!-- Step-by-Step Application Process -->
+      <div class="mb-16">
+        <h2 class="text-gray-900 text-3xl font-bold mb-8 ">
+          How to Apply for Free Government Phone Service Near Me
+        </h2>
+        
+        <div class="space-y-4">
+          <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+            <div class="flex items-start">
+              <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 mt-1">1</div>
+              <div>
+                <h3 class="text-gray-900 text-xl font-semibold text-blue-600 mb-3 ">Verify Your Eligibility</h3>
+                <p class="text-gray-900 mb-4 ">
+                  First, confirm you qualify for free government phone service. You can qualify through income (135% of poverty level for Lifeline, 200% for ACP) or participation in government programs like SNAP, Medicaid, or SSI.
+                </p>
+                <a href="/eligibility" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                  Check My Eligibility Now
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+            <div class="flex items-start">
+              <div class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 mt-1">2</div>
+              <div>
+                <h3 class="text-gray-900 text-xl font-semibold text-green-600 mb-3 ">Choose Your Local Provider</h3>
+                <p class="text-gray-900 mb-4 ">
+                  Select a provider that offers service in your area. Compare their coverage, data plans, and device options to find the best fit for your needs.
+                </p>
+                <a href="/providers" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
+                  Browse All Providers
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+            <div class="flex items-start">
+              <div class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 mt-1">3</div>
+              <div>
+                <h3 class="text-gray-900 text-xl font-semibold text-purple-600 mb-3 ">Complete Your Application</h3>
+                <p class="text-gray-900 mb-4 ">
+                  Fill out the application with your personal information and proof of eligibility. Most applications are approved instantly when submitted online.
+                </p>
+                <a href="/apply" class="inline-block bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors">
+                  Start My Application
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+            <div class="flex items-start">
+              <div class="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 mt-1">4</div>
+              <div>
+                <h3 class="text-gray-900 text-xl font-semibold text-orange-600 mb-3 ">Receive Your Free Phone</h3>
+                <p class="text-gray-900 mb-4 ">
+                  Once approved, your free government phone will be shipped to your address within 3-5 business days. You can also choose to activate service on your existing device.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- What You Get -->
+      <div class="mb-16">
+        <h2 class="text-gray-900 text-3xl font-bold mb-8 ">
+          What You Get with Free Government Phone Service Near Me
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-xl font-semibold mb-4 ">📱 Free Smartphone</h3>
+            <ul class="space-y-3 text-gray-900">
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                Latest smartphone models available
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                No device payment or activation fees
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                Option to bring your own device
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                Free shipping to your address
+              </li>
+            </ul>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-xl font-semibold mb-4 ">📞 Monthly Service Plan</h3>
+            <ul class="space-y-3 text-gray-900">
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                Unlimited talk and text minutes
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                Generous data allowance included
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                Keep your existing phone number
+              </li>
+              <li class="text-gray-900 flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                Nationwide coverage with no roaming fees
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-green-50 p-6 rounded-lg mt-8 border border-green-200">
+          <h3 class="text-gray-900 text-xl font-semibold text-green-800 mb-4 ">💰 Financial Benefits</h3>
+          <div class="grid md:grid-cols-3 gap-4 text-center">
+            <div>
+              <div class="text-2xl font-bold text-green-600">$360</div>
+              <div class="text-green-700 text-sm">Annual Savings</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-green-600">$0</div>
+              <div class="text-green-700 text-sm">Monthly Cost</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-green-600">100%</div>
+              <div class="text-green-700 text-sm">Free Service</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ Section -->
+      <div class="mb-16">
+        <h2 class="text-gray-900 text-3xl font-bold mb-8 ">
+          Frequently Asked Questions About Free Government Phone Near Me
+        </h2>
+        
+        <div class="space-y-4">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-lg font-semibold mb-3 ">
+              How do I find free government phone providers near me?
+            </h3>
+            <p class="text-gray-900">
+              You can find local providers by using online directories, contacting major carriers directly, or checking with your state's Public Utility Commission. Most major wireless carriers participate in government programs and have local stores where you can apply in person.
+            </p>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-lg font-semibold mb-3 ">
+              Can I get a free government phone if I already have a phone?
+            </h3>
+            <p class="text-gray-900">
+              Absolutely! You have two options: receive a free smartphone from the provider, or bring your own device and get free service. Many people choose to keep their existing phone and just switch to free government service.
+            </p>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-lg font-semibold mb-3 ">
+              How long does it take to get approved for free government phone service?
+            </h3>
+            <p class="text-gray-900">
+              Most online applications are approved instantly. If additional documentation is required, approval typically takes 1-3 business days. Once approved, your phone will be shipped within 3-5 business days.
+            </p>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-lg font-semibold mb-3 ">
+              Can I keep my current phone number?
+            </h3>
+            <p class="text-gray-900">
+              Yes, most providers support number porting, allowing you to keep your existing phone number when switching to free government phone service. This process is usually free and takes 1-2 business days.
+            </p>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-lg font-semibold mb-3 ">
+              What documents do I need to apply for free government phone service?
+            </h3>
+            <p class="text-gray-900">
+              You'll need proof of income (recent pay stubs, tax returns) or proof of program participation (benefit letters, cards), a valid photo ID, and proof of address (utility bills, lease agreement). The application process is designed to be simple and user-friendly.
+            </p>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-900 text-lg font-semibold mb-3 ">
+              Is there a limit to how long I can have free government phone service?
+            </h3>
+            <p class="text-gray-900">
+              As long as you remain eligible, you can continue receiving free government phone service. You'll need to recertify your eligibility annually, but the service itself has no time limit for qualified individuals.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final CTA Section -->
+      <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-lg text-center">
+        <h2 class="text-gray-900 text-3xl font-bold mb-4 ">
+          Ready to Find Free Government Phone Service Near Me?
+        </h2>
+        <p class="text-gray-900 text-xl mb-8 ">
+          Don't wait to start saving money on your phone bill. Join millions of Americans who are already enjoying free government phone service. 
+        </p>
+        <div class="flex justify-center">
+          <a href="/apply" class="block md:inline-block w-full md:w-auto max-w-md md:max-w-none mx-auto py-4 px-10 text-lg font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 active:scale-95 transition-all duration-300 no-underline" style={`background: linear-gradient(135deg, ${designDNA.colors.accent} 0%, ${designDNA.colors.accentDark || designDNA.colors.accent} 100%); color: white;`}>
+            Apply Now
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Related Content Section -->
+  <RelatedContent currentPage="home" />
+</Layout> 

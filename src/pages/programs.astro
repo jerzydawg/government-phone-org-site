@@ -1,0 +1,203 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const jsonLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "Complete Directory of Free Government Phone Programs Available in 2025",
+      "description": "Discover every available free government phone program including federal Lifeline, ACP benefits, state-specific programs, and special assistance options for qualifying households.",
+      "author": {
+        "@type": "Organization",
+        "name": siteName
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${siteURL}/logo.png`
+        }
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": `${siteURL}/programs`
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How many different free government phone programs exist?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "There are multiple free government phone programs available, including federal programs like Lifeline and ACP, plus dozens of state-specific programs. Each program has different eligibility requirements and benefits."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What's the difference between Lifeline and ACP programs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Lifeline provides free phone service and devices, while ACP focuses on internet discounts. Many households can receive both benefits simultaneously if they qualify for the programs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I switch between different free phone programs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, you can switch between approved providers within the same program. However, you can only receive one Lifeline benefit per household at a time."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do state programs offer better benefits than federal programs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "State programs often provide additional benefits on top of federal programs. Some states offer upgraded devices, extra data, or expanded eligibility requirements beyond federal minimums."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to Pick the Right Free Government Phone Program",
+      "description": "Step-by-step process to evaluate and select the best free government phone program for your needs.",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Assess Your Qualification Status",
+          "text": "Review your income level and participation in government assistance programs to determine which free phone programs you're eligible to receive."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Compare Available Benefits",
+          "text": "Look at what each program offers including monthly data allowances, device options, and additional services to find the best match for your needs."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Research Provider Options",
+          "text": "Check which approved providers serve your area and compare their specific offerings, coverage areas, and customer service ratings."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Your Application",
+          "text": "Complete the application process with your chosen provider, providing required documentation to verify your eligibility for the program."
+        }
+      ]
+    },
+    {
+      "@type": "GovernmentService",
+      "name": "Free Government Phone Programs Directory",
+      "description": "Comprehensive resource for finding and applying to all available free government phone assistance programs including federal, state, and special eligibility programs.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Federal Communications Commission"
+      },
+      "serviceType": "Telecommunications Assistance",
+      "areaServed": "United States"
+    }
+  ]
+};
+---
+
+<Layout 
+  title="Free Government Phone - All Free Phone Programs | Government Phone"
+  description="Find all free government phone programs available in 2025. Compare Lifeline, ACP, state programs, and special assistance options. See which programs you qualify for today."
+  keywords="free government phone, lifeline program, ACP benefits, state phone programs, free phone service"
+  jsonLD={jsonLD}
+>
+  <main class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <!-- Breadcrumb Navigation -->
+    <nav class="bg-white shadow-sm border-b" aria-label="Breadcrumb">
+      <div class="container mx-auto px-4 py-3">
+        <ol class="flex items-center space-x-2 text-sm">
+          <li><a href="/" class="text-[var(--color-primary)] hover:underline">Home</a></li>
+          <li class="text-gray-400">/</li>
+          <li class="text-gray-600 font-medium">Programs</li>
+        </ol>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="py-12 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+      <div class="container mx-auto px-4 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6">Free Government Phone</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Explore every available free phone program and find the perfect match for your household's needs</p>
+        <a href="/apply" 
+           class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg inline-block text-lg">
+          Find Your Program Now
+        </a>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-12">
+      <div class="max-w-4xl mx-auto">
+        
+        <!-- Introduction Section -->
+        <section class="mb-12">
+          <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <p class="text-lg leading-relaxed mb-6">
+              Getting a <strong class="text-[var(--color-primary)]">Free Government Phone</strong> has never been easier with multiple programs designed to help qualifying families. These programs ensure everyone has access to essential communication services regardless of their financial situation.
+            </p>
+            
+            <p class="text-lg leading-relaxed mb-6">
+              From federal programs like Lifeline to state-specific initiatives, there are numerous ways to receive free phone service and devices. Each program offers different benefits, so understanding your options helps you choose the best fit for your household's needs.
+            </p>
+
+            <p class="text-lg leading-relaxed">
+              Whether you need basic calling and texting or require extensive data for internet access, there's likely a <strong class="text-[var(--color-primary)]">Free Government Phone</strong> program that matches your requirements. Let's explore all the available options.
+            </p>
+          </div>
+        </section>
+
+        <!-- Federal Programs Section -->
+        <section id="federal-programs" class="mb-12">
+          <div class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold mb-6 text-gray-900">Major Federal Phone Assistance Programs</h2>
+            
+            <div class="space-y-6">
+              <div class="border-l-4 border-[var(--color-primary)] pl-6">
+                <h3 class="text-2xl font-semibold mb-3 text-gray-800">Lifeline Program</h3>
+                <p class="text-gray-700 mb-4">
+                  The most established program providing free phone service to eligible households. Participants receive either a free smartphone with monthly service or a discount on their existing phone bill.
+                </p>
+                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                  <li>Free Android smartphone or service discount</li>
+                  <li>Unlimited talk and text included</li>
+                  <li>Monthly high-speed data allowance</li>
+                  <li>Available through multiple providers nationwide</li>
+                </ul>
+              </div>
+
+              <div class="border-l-4 border-green-500 pl-6">
+                <h3 class="text-2xl font-semibold mb-3 text-gray-800">Affordable Connectivity Program (ACP)</h3>
+                <p class="text-gray-700 mb-4">
+                  Focuses primarily on internet access but many providers bundle phone services with their ACP offerings. This program can work alongside Lifeline benefits.
+                </p>
+                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                  <li>Up to $30 monthly internet discount</li>
+                  <li>Device discounts up to $100</li>
+                  <li>Can combine with Lifeline for maximum savings</li>
+                  <li>Broader eligibility requirements than Lifeline</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- State Programs Section -->
+        <section id="state-programs" class="mb-12">
+          <div class="bg

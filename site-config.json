@@ -1,0 +1,29 @@
+{
+  "domain": "government-phone.org",
+  "siteName": "Government Phone",
+  "keyword": "Free Government Phone",
+  "ownerEmail": "smartguru6892@gmail.com",
+  "designStyle": "advanced",
+  "designDNA": {
+    "colors": {
+      "primary": "#DC2626",
+      "secondary": "#1D4ED8",
+      "background": "#FEF2F2",
+      "text": "#1A1A1A",
+      "accent": "#059669"
+    },
+    "typography": {
+      "heading": "Clash Display",
+      "body": "Satoshi",
+      "scale": 1.25
+    },
+    "shape": {
+      "buttonStyle": "rounded",
+      "cardStyle": "bordered",
+      "borderRadius": 12
+    }
+  },
+  "environment": "production",
+  "createdAt": "2025-12-12T14:16:25.098Z",
+  "version": "1.0.0"
+}

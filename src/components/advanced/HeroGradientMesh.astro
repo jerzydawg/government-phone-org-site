@@ -1,0 +1,161 @@
+---
+/**
+ * Advanced Hero - Gradient Mesh Variant
+ * Modern gradient mesh background with glassmorphism
+ */
+import { getSiteName, getKeyword, getDesignDNA, getDomain } from '../../lib/site-config';
+import { getContentVariations, getCTASectionVariations } from '../../lib/city-content-variations';
+import { getCTAVariation } from '../../lib/variations/shared/cta-variations';
+
+interface Props {
+  customH1?: string;
+}
+const { customH1 } = Astro.props;
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const designDNA = getDesignDNA();
+const domain = getDomain();
+const content = getContentVariations(domain);
+const ctaSection = getCTASectionVariations(domain, keyword);
+const h1Text = customH1 || keyword;
+---
+
+<section class="relative min-h-[90vh] flex items-center overflow-hidden">
+  <!-- Gradient Mesh Background -->
+  <div class="absolute inset-0 gradient-mesh" style={`
+    --color-1: ${designDNA.colors.primary}40;
+    --color-2: ${designDNA.colors.secondary}30;
+    --color-3: ${designDNA.colors.accent}25;
+    --color-4: ${designDNA.colors.background};
+  `}></div>
+  
+  <!-- Floating Orbs -->
+  <div class="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl opacity-40 animate-float-slow" style={`background: ${designDNA.colors.primary};`}></div>
+  <div class="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl opacity-30 animate-float-medium" style={`background: ${designDNA.colors.accent};`}></div>
+  <div class="absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-3xl opacity-20 animate-float-fast" style={`background: ${designDNA.colors.secondary};`}></div>
+  
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="grid lg:grid-cols-5 gap-12 items-center">
+      <!-- Main Content - 3 cols -->
+      <div class="lg:col-span-3">
+        <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold mb-6 backdrop-blur-md" style={`background: ${designDNA.colors.primary}20; color: ${designDNA.colors.primary}; border: 1px solid ${designDNA.colors.primary}30;`}>
+          <span class="w-2 h-2 rounded-full mr-2 animate-pulse" style={`background: ${designDNA.colors.accent};`}></span>
+          {content.trustBadges[0]}
+        </div>
+        
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={`color: ${designDNA.colors.text}; font-family: var(--font-heading);`}>
+          {h1Text}
+        </h1>
+        
+        <p class="text-lg md:text-xl mb-8 leading-relaxed max-w-xl" style={`color: ${designDNA.colors.text}80;`}>
+          {content.heroTagline} {content.heroSubtext}
+        </p>
+        
+        <!-- CTA Row -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-8" style={`color: ${designDNA.colors.text};`}>
+          <a href="/apply" class="inline-flex items-center justify-center px-8 py-4 text-lg font-bold rounded-2xl shadow-xl transform hover:scale-105 transition-all backdrop-blur-sm" style={`background: ${designDNA.gradients.primary}; color: ${designDNA.colors.textOnPrimary};`}>
+            {getCTAVariation(domain, "hero")}
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <a href="/eligibility" class="inline-flex items-center justify-center px-8 py-4 text-lg font-bold rounded-2xl backdrop-blur-md transition-all hover:shadow-lg" style={`background: white; color: ${designDNA.colors.primary}; border: 2px solid ${designDNA.colors.primary}30;`}>
+            {ctaSection.tertiaryButton}
+          </a>
+        </div>
+        
+        <!-- Trust Badges -->
+        <div class="flex flex-wrap gap-4">
+          <span class="inline-flex items-center px-4 py-2 rounded-full text-sm backdrop-blur-md" style={`background: white; color: ${designDNA.colors.text}; border: 1px solid ${designDNA.colors.primary}20;`}>
+            <svg class="w-4 h-4 mr-2" style={`color: ${designDNA.colors.primary};`} fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            {content.trustBadges[1]}
+          </span>
+          <span class="inline-flex items-center px-4 py-2 rounded-full text-sm backdrop-blur-md" style={`background: white; color: ${designDNA.colors.text}; border: 1px solid ${designDNA.colors.accent}20;`}>
+            <svg class="w-4 h-4 mr-2" style={`color: ${designDNA.colors.accent};`} fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            {content.trustBadges[2]}
+          </span>
+        </div>
+      </div>
+      
+      <!-- Stats Cards - 2 cols -->
+      <div class="lg:col-span-2 space-y-4">
+        <!-- Glass Card 1 -->
+        <div class="backdrop-blur-lg rounded-3xl p-6 shadow-xl" style={`background: white; border: 1px solid ${designDNA.colors.primary}20;`}>
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style={`background: ${designDNA.colors.primary}15;`}>
+              <span class="text-3xl" style={`color: ${designDNA.colors.text};`}>{content.icons.phone}</span>
+            </div>
+            <div>
+              <div class="text-3xl font-bold" style={`color: ${designDNA.colors.primary};`}>{content.heroStats.stat1.value}</div>
+              <div class="text-sm" style={`color: ${designDNA.colors.text}60;`}>{content.heroStats.stat1.label}</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Glass Card 2 -->
+        <div class="backdrop-blur-lg rounded-3xl p-6 shadow-xl" style={`background: white; border: 1px solid ${designDNA.colors.accent}20;`}>
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style={`background: ${designDNA.colors.accent}15;`}>
+              <span class="text-3xl" style={`color: ${designDNA.colors.text};`}>{content.icons.money}</span>
+            </div>
+            <div>
+              <div class="text-3xl font-bold" style={`color: ${designDNA.colors.accent};`}>{content.heroStats.stat2.value}</div>
+              <div class="text-sm" style={`color: ${designDNA.colors.text}60;`}>{content.heroStats.stat2.label}</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Glass Card 3 -->
+        <div class="backdrop-blur-lg rounded-3xl p-6 shadow-xl" style={`background: white; border: 1px solid ${designDNA.colors.secondary}20;`}>
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style={`background: ${designDNA.colors.secondary}15;`}>
+              <span class="text-3xl" style={`color: ${designDNA.colors.text};`}>{content.icons.speed}</span>
+            </div>
+            <div>
+              <div class="text-3xl font-bold" style={`color: ${designDNA.colors.secondary};`}>{content.heroStats.stat3.value}</div>
+              <div class="text-sm" style={`color: ${designDNA.colors.text}60;`}>{content.heroStats.stat3.label}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .gradient-mesh {
+    background: 
+      radial-gradient(at 40% 20%, var(--color-1) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, var(--color-2) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, var(--color-3) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, var(--color-1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, var(--color-2) 0px, transparent 50%),
+      radial-gradient(at 80% 100%, var(--color-3) 0px, transparent 50%),
+      var(--color-4);
+  }
+  
+  @keyframes float-slow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(30px, -30px); }
+  }
+  
+  @keyframes float-medium {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-20px, 20px); }
+  }
+  
+  @keyframes float-fast {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(15px, 15px); }
+  }
+  
+  .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
+  .animate-float-medium { animation: float-medium 6s ease-in-out infinite; }
+  .animate-float-fast { animation: float-fast 4s ease-in-out infinite; }
+</style>
+

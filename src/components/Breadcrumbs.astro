@@ -1,0 +1,53 @@
+---
+import { getSiteURL } from '../lib/site-config';
+import { getDesignDNA } from '../lib/site-config';
+const designDNA = getDesignDNA();
+
+export interface Props {
+  items: Array<{
+    label: string;
+    href?: string;
+  }>;
+}
+
+const { items } = Astro.props;
+const siteURL = getSiteURL();
+
+// Generate structured data for breadcrumbs
+const breadcrumbStructuredData = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement": items.map((item, index) => ({"@type":"ListItem","position": index + 1,"name": item.label,"item": item.href ? `${siteURL}${item.href}` : undefined
+  }))
+};
+---
+
+<!-- Breadcrumb Structured Data -->
+<script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} />
+
+<!-- Breadcrumb Navigation -->
+<nav class="bg-gray-50 py-3 border-b border-gray-200" aria-label="Breadcrumb">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <ol class="flex items-center space-x-2 text-sm">
+      {items.map((item, index) => (
+        <li class="flex items-center" style={`color: ${designDNA.colors.text};`}>
+          {index > 0 && (
+            <svg class="w-4 h-4 mx-2" style={`color: ${designDNA.colors.text};`} fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          )}
+          
+          {item.href ? (
+            <a 
+              href={item.href}
+              class="hover:text-[var(--color-primary)] transition-colors duration-200" style={`color: ${designDNA.colors.text};`}
+            >
+              {item.label}
+            </a>
+          ) : (
+            <span class="font-medium" style={`color: ${designDNA.colors.text};`} aria-current="page">
+              {item.label}
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </div>
+</nav> 

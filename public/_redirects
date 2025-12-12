@@ -1,0 +1,20 @@
+# Static site redirects - SSR enabled
+# All dynamic routes go to SSR function
+
+# Redirect old URLs to new ones
+/old-page /new-page 301
+
+# Handle static assets
+/_astro/*    /_astro/:splat    200
+/favicon.ico    /favicon.ico    200
+/robots.txt    /robots.txt    200
+/sitemap*.xml    /sitemap:splat.xml    200
+
+# Test SSR function
+/test-ssr    /.netlify/functions/test-ssr   200
+
+# UMGTRK redirects
+/apply  https://www.umgtrk.com/4GTN7Q/5NWWWN/  302
+/check-eligibility  https://www.umgtrk.com/4GTN7Q/5NWWWN/  302
+/get-free-phone  https://www.umgtrk.com/4GTN7Q/5NWWWN/  302
+/start-application  https://www.umgtrk.com/4GTN7Q/5NWWWN/  302

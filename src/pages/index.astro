@@ -1,0 +1,159 @@
+---
+import Layout from '../layouts/Layout.astro';
+import HeroSelector from '../components/HeroSelector.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import ProgramsSection from '../components/sections/ProgramsSection.astro';
+import FeaturesSection from '../components/sections/FeaturesSection.astro';
+import StatesSection from '../components/sections/StatesSection.astro';
+import CitiesSection from '../components/sections/CitiesSection.astro';
+import CTASection from '../components/sections/CTASection.astro';
+import { getSiteConfig, getDesignDNA, getSiteName, getKeyword, getDomain, getSiteURL, getKeywordId } from '../lib/site-config';
+import { generateCSSVariables, getGoogleFontsURL } from '../lib/design-dna';
+import { getContentVariations } from '../lib/city-content-variations';
+import { loadKeywordVariations } from '../lib/variations/shared/keyword-loader';
+
+export const prerender = false;
+
+// Get site configuration
+const siteConfig = getSiteConfig();
+const designDNA = getDesignDNA();
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+const keywordId = getKeywordId(); // Already has fallback in getKeywordId() function
+const canonicalURL = `${siteURL}/`;
+
+// Get content variations for this domain (legacy hero/CTA variations)
+const content = getContentVariations(domain);
+
+// Load keyword-specific variations (NEW - H1, H2, Meta) with error handling
+let h1Content = { h1: `Get Your Free ${keyword} Today` };
+let metaContent = { title: `${siteName} - ${keyword}`, description: `Apply for your ${keyword.toLowerCase()} through ${siteName}.` };
+
+// Safely load keyword variations with comprehensive error handling
+// Always attempt to load, but gracefully fall back if anything fails
+try {
+  // Ensure keywordId is valid (should always be valid due to getKeywordId() fallback)
+  const validKeywordId = keywordId && keywordId.trim() ? keywordId.trim() : 'free-government-phone';
+  
+  const variations = await loadKeywordVariations(validKeywordId);
+  
+  if (variations && typeof variations.getH1Variation === 'function' && typeof variations.getMetaVariations === 'function') {
+    try {
+      h1Content = variations.getH1Variation(domain, 'home');
+      metaContent = variations.getMetaVariations(siteName, domain, 'home');
+      
+      // Strict validation to prevent 'null' or 'undefined' literal strings
+      if (!h1Content || typeof h1Content !== 'object' || !h1Content.h1 || typeof h1Content.h1 !== 'string' ||
+          h1Content.h1.trim() === '' || h1Content.h1 === 'null' || h1Content.h1 === 'undefined') {
+        console.warn('Invalid H1 content returned, using fallback');
+        h1Content = { h1: `Get Your Free ${keyword} Today` };
+      }
+      if (!metaContent || typeof metaContent !== 'object' || !metaContent.title || !metaContent.description ||
+          typeof metaContent.title !== 'string' || typeof metaContent.description !== 'string' ||
+          metaContent.title === 'null' || metaContent.title === 'undefined' ||
+          metaContent.description === 'null' || metaContent.description === 'undefined') {
+        console.warn('Invalid meta content returned, using fallback');
+        metaContent = { title: `${siteName} - ${keyword}`, description: `Apply for your ${keyword.toLowerCase()} through ${siteName}.` };
+      }
+    } catch (variationError: any) {
+      console.error('Error calling variation functions:', variationError?.message || variationError);
+      // Use fallback values already set above - don't throw, just log
+    }
+  } else {
+    console.warn('Variation functions not available in loaded module, using fallback content');
+    // Use fallback values already set above
+  }
+} catch (loadError: any) {
+  // Catch all errors and use fallback - never crash the page
+  console.error('Failed to load keyword variations for homepage:', loadError?.message || loadError);
+  // Fallback values are already set above, so page will still render
+}
+
+// Generate dynamic CSS and fonts
+const cssVariables = generateCSSVariables(designDNA);
+const fontsURL = getGoogleFontsURL(designDNA);
+
+// Get section order from Design DNA (for dynamic page assembly)
+// This allows different sites to have different section layouts
+const sectionOrder = designDNA.advancedLayout?.sectionOrder || ['howItWorks', 'features', 'programs', 'states', 'cities', 'cta'];
+
+// SEO Meta Tags - Dynamic from keyword variations (NEW)
+const title = metaContent.title;
+const description = metaContent.description;
+// canonicalURL already declared above on line 25
+
+// Structured Data for Homepage
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": siteName,
+  "url": siteURL,
+  "description": description,
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": `${siteURL}/?q={search_term_string}`,
+    "query-input": "required name=search_term_string"
+  }
+};
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalURL}>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <main class="min-h-screen">
+    <!-- Hero Section - Always first, dynamic based on design style -->
+    <HeroSelector customH1={h1Content.h1} />
+
+    <!-- Quick Links Section - Internal Links for SEO -->
+    <section class="py-8 bg-white border-b border-gray-200">
+      <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+          <h2 class="text-gray-900 text-2xl font-bold text-center mb-6">Get Started</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <a href="/programs" style={`background: #F9FAFB;`} class="text-center p-4 rounded-lg hover:shadow-md transition-all" onmouseover={`this.style.background='${designDNA.colors.primary}15';`} onmouseout="this.style.background='#F9FAFB';">
+              <div class="text-2xl mb-2">📋</div>
+              <div class="text-gray-900 font-semibold text-sm">Programs</div>
+            </a>
+            <a href="/eligibility" class="text-center p-4 bg-gray-50 rounded-lg hover:bg-green-50 hover:shadow-md transition-all">
+              <div class="text-2xl mb-2">✅</div>
+              <div class="text-gray-900 font-semibold text-sm">Eligibility</div>
+            </a>
+            <a href="/providers" class="text-center p-4 bg-gray-50 rounded-lg hover:bg-purple-50 hover:shadow-md transition-all">
+              <div class="text-2xl mb-2">📱</div>
+              <div class="text-gray-900 font-semibold text-sm">Providers</div>
+            </a>
+            <a href="/faq" class="text-center p-4 bg-gray-50 rounded-lg hover:bg-yellow-50 hover:shadow-md transition-all">
+              <div class="text-2xl mb-2">❓</div>
+              <div class="text-gray-900 font-semibold text-sm">FAQ</div>
+            </a>
+            <a href="/lifeline-program" style={`background: #F9FAFB;`} class="text-center p-4 rounded-lg hover:shadow-md transition-all" onmouseover={`this.style.background='${designDNA.colors.primary}15';`} onmouseout="this.style.background='#F9FAFB';">
+              <div class="text-2xl mb-2">📞</div>
+              <div class="text-gray-900 font-semibold text-sm">Lifeline</div>
+            </a>
+            <a href="/acp-program" class="text-center p-4 bg-gray-50 rounded-lg hover:bg-green-50 hover:shadow-md transition-all">
+              <div class="text-2xl mb-2">🌐</div>
+              <div class="text-gray-900 font-semibold text-sm">ACP</div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dynamic Section Ordering - Each site can have different section order -->
+    {Array.isArray(sectionOrder) && sectionOrder.map((section) => {
+      try {
+        if (section === 'howItWorks') return <HowItWorks />;
+        if (section === 'programs') return <ProgramsSection />;
+        if (section === 'features') return <FeaturesSection />;
+        if (section === 'states') return <StatesSection />;
+        if (section === 'cities') return <CitiesSection />;
+        if (section === 'cta') return <CTASection />;
+        return null;
+      } catch (error) {
+        console.error(`Section render error for "${section}":`, error);
+        return null;  // Fail gracefully, don't crash entire page
+      }
+    })}
+  </main>
+</Layout>

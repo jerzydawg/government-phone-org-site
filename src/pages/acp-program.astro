@@ -1,0 +1,183 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const title = `${keyword} - ACP Free Internet & Phone | ${siteName}`;
+const description = "Get free internet and phone service through the ACP program. Up to $30/month discount plus free device. Check qualification and apply today.";
+const canonical = `${siteURL}/acp-program`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "ACP Internet & Phone Program: Complete Access Guide",
+      "description": "Comprehensive information about getting free internet and phone service through the Affordable Connectivity Program with device benefits.",
+      "author": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": canonical
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What's the difference between ACP and Lifeline benefits?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ACP provides up to $30 monthly internet discounts plus device support, while Lifeline offers phone service discounts. Many people qualify for both programs and can use them together for maximum savings."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does ACP reduce my monthly internet bill?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ACP reduces your internet bill by up to $30 per month. Tribal households can receive up to $75 monthly. The program also provides a one-time device discount of up to $100."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I get a free tablet or laptop through ACP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, ACP offers up to $100 discount on tablets, laptops, or desktop computers. You pay between $10-50 for a device that normally costs much more. Each household gets one device discount."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to reapply for ACP benefits every year?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No annual reapplication needed. However, you must recertify your eligibility every 12 months by providing updated income or program participation documentation to continue receiving benefits."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to Get ACP Free Internet and Phone",
+      "description": "Step-by-step process to obtain free internet service and phone through the ACP program",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Confirm Your ACP Eligibility",
+          "text": "Review income requirements or participation in federal assistance programs like SNAP, Medicaid, or WIC. Households at 200% of poverty level automatically qualify."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Your ACP Application",
+          "text": "Complete the official ACP application online or by mail. Provide required documentation including ID, address proof, and income or program verification."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Select Your Internet Provider",
+          "text": "Choose from participating providers in your area. Compare plans, speeds, and device options. Many providers offer completely free service with ACP benefits."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Activate Your Service and Device",
+          "text": "Contact your chosen provider to activate service. Apply your device discount if purchasing a tablet, laptop, or computer. Begin using your free internet immediately."
+        }
+      ]
+    },
+    {
+      "@type": "GovernmentService",
+      "name": "Affordable Connectivity Program",
+      "description": "Federal program providing monthly internet discounts and device support to eligible low-income households",
+      "serviceType": "Internet and Device Assistance",
+      "areaServed": "United States",
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Low-income households"
+      }
+    }
+  ]
+};
+---
+
+<Layout title={title} description={description} canonical={canonical} jsonLd={jsonLd}>
+  <!-- Breadcrumb Navigation -->
+  <nav class="bg-gray-50 py-3 px-4" aria-label="Breadcrumb">
+    <div class="max-w-7xl mx-auto">
+      <ol class="flex items-center space-x-2 text-sm">
+        <li><a href="/" class="text-[var(--color-primary)] hover:underline">Home</a></li>
+        <li class="text-gray-500">/</li>
+        <li class="text-gray-700">ACP Program</li>
+      </ol>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Hero Section -->
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Free Government Phone</h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">Get up to $30 monthly internet discount plus free device through the ACP program. Connect to high-speed internet without breaking your budget.</p>
+    </header>
+
+    <!-- Primary CTA -->
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 text-center mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Ready to Get Connected?</h2>
+      <p class="text-gray-600 mb-6">Check your qualification status and start saving on internet service today</p>
+      <a href="/apply" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg inline-block">VERIFY ELIGIBILITY NOW</a>
+      <p class="text-sm text-gray-500 mt-3">Free qualification check • No credit impact</p>
+    </div>
+
+    <!-- Main Content -->
+    <article class="prose prose-lg max-w-none">
+      <!-- Introduction -->
+      <section class="mb-10">
+        <p class="text-lg leading-relaxed">Looking for ways to reduce your internet and phone costs? The Affordable Connectivity Program makes it possible to get connected without the high monthly fees. This federal program transforms how low-income families access essential digital services.</p>
+        
+        <p>Through <strong>{siteName}</strong>, eligible households discover they can receive substantial monthly discounts on internet service. The program goes beyond basic connectivity - it includes device support that makes technology more accessible than ever before.</p>
+        
+        <p>Millions of Americans already benefit from this program. Whether you need internet for work, school, or staying connected with family, ACP provides the financial support that makes reliable service affordable for everyone.</p>
+      </section>
+
+      <!-- What is ACP -->
+      <section class="mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Understanding the ACP Program Benefits</h2>
+        
+        <p>The Affordable Connectivity Program represents a significant investment in digital equity across America. Unlike traditional assistance programs that focus solely on phone service, ACP tackles the broader challenge of internet accessibility.</p>
+        
+        <p>Every qualifying household receives meaningful financial support that reduces their monthly connectivity costs. The program recognizes that high-speed internet has become as essential as electricity or water in modern life. <strong>Free Government Phone</strong> providers often participate in ACP, creating comprehensive connectivity solutions.</p>
+        
+        <p>What sets ACP apart is its device component. Recognizing that internet access requires proper equipment, the program includes significant discounts on computers, tablets, and other connected devices that families need to fully participate in the digital economy.</p>
+      </section>
+
+      <!-- What You Get -->
+      <section class="mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Complete ACP Benefit Package</h2>
+        
+        <p>ACP delivers comprehensive support that addresses both monthly service costs and device affordability. Your benefits package includes multiple components designed to eliminate barriers to connectivity.</p>
+        
+        <div class="bg-green-50 border-l-4 border-green-400 p-6 my-6">
+          <h3 class="text-xl font-semibold text-green-800 mb-3">Monthly Service Savings</h3>
+          <ul class="space-y-2 text-green-700">
+            <li>• Up to $30 monthly discount on internet service</li>
+            <li>• Up to $75 monthly discount for tribal households</li>
+            <li>• Compatible with existing phone programs</li>
+            <li>• Works with most major internet providers</li>
+          </ul>
+        </div>
+        
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-6 my-6">
+          <h3 class="text-xl font-semibold text-blue-800 mb-3">Device

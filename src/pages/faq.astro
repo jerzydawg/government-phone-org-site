@@ -1,0 +1,184 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteName, getKeyword, getDomain, getSiteURL } from '../lib/site-config';
+
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+const title = `${keyword} - Common Questions Answered | ${siteName}`;
+const description = "Get answers to frequently asked questions about free government phone programs. Learn about eligibility, applications, service details, and provider options.";
+const canonicalURL = `${siteURL}/faq`;
+
+const jsonLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "Essential Questions About Free Government Phone Programs",
+      "description": "Comprehensive answers to common questions about obtaining free government phones through federal assistance programs.",
+      "author": {
+        "@type": "Organization",
+        "name": siteName
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteURL
+      },
+      "datePublished": "2025-12-12",
+      "dateModified": "2025-12-12",
+      "url": canonicalURL
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What income requirements must I meet to get a free government phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Your household income must be at or below 135% of the Federal Poverty Guidelines. For example, a single person can earn up to $1,215 monthly, while a family of four can earn up to $2,515 monthly and still qualify for the program."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I receive both Lifeline and ACP benefits at the same time?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No, federal rules prevent households from receiving both Lifeline phone service and ACP internet discounts simultaneously. You must choose one program that best fits your communication needs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does the application approval process typically take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Most applications are processed within 7-10 business days. You'll receive confirmation via email or mail once your eligibility is verified and approved by the National Verifier system."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if I don't use my free phone service regularly?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The FCC requires usage every 30 days to maintain active service. If you don't make calls, send texts, or use data within 30 days, your service may be suspended. After 60 days of non-usage, your benefits could be permanently terminated."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to Get Answers About Free Government Phone Programs",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Review Eligibility Information",
+          "text": "Check the income limits and program requirements to understand if you qualify for free government phone service before applying."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Gather Required Documentation",
+          "text": "Collect proof of income or benefit participation documents that demonstrate your eligibility for the program."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Submit Your Application",
+          "text": "Complete the application process online or by phone, providing all necessary information and documentation."
+        }
+      ]
+    },
+    {
+      "@type": "GovernmentService",
+      "name": "Free Government Phone Program",
+      "description": "Federal assistance program providing free wireless phone service and data to qualifying low-income households across the United States.",
+      "provider": {
+        "@type": "GovernmentOrganization",
+        "name": "Federal Communications Commission"
+      },
+      "serviceType": "Telecommunications Assistance",
+      "audience": {
+        "@type": "Audience",
+        "name": "Low-income households"
+      }
+    }
+  ]
+};
+---
+
+<Layout title={title} description={description} canonicalURL={canonicalURL}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />
+  
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="mb-8" aria-label="Breadcrumb">
+      <ol class="flex space-x-2 text-sm">
+        <li><a href="/" class="text-[var(--color-primary)] hover:underline">Home</a></li>
+        <li class="text-gray-500">/</li>
+        <li class="text-gray-700 font-medium">FAQ</li>
+      </ol>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Free Government Phone</h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">Get clear answers to your most important questions about obtaining free phone service through government assistance programs.</p>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 mb-12 text-center">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Ready to Apply for Your Free Phone?</h2>
+      <p class="text-gray-700 mb-6">Don't wait - check your eligibility and get connected today with no upfront costs.</p>
+      <a href="/apply" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg inline-block mr-4">CONFIRM ELIGIBILITY TODAY</a>
+      <p class="text-sm text-gray-600 mt-2">Quick approval process • No credit checks required</p>
+    </div>
+
+    <!-- Introduction -->
+    <div class="mb-12">
+      <p class="text-lg text-gray-700 leading-relaxed mb-6">
+        Thousands of people have questions about getting a <strong>Free Government Phone</strong> through federal assistance programs. Understanding the process, requirements, and benefits can seem overwhelming at first. That's why <strong>Government Phone</strong> has compiled the most frequently asked questions to help you navigate this valuable program with confidence.
+      </p>
+      
+      <p class="text-lg text-gray-700 leading-relaxed">
+        These programs exist to ensure everyone has access to essential communication services, regardless of their financial situation. Whether you're curious about eligibility requirements, application procedures, or service details, you'll find straightforward answers that make the process clear and simple.
+      </p>
+    </div>
+
+    <!-- Eligibility FAQs -->
+    <section class="mb-12">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Understanding Program Qualification</h2>
+      
+      <div class="space-y-8">
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">What income requirements must I meet to get a free government phone?</h3>
+          <p class="text-gray-700 leading-relaxed">
+            Your household income must be at or below 135% of the Federal Poverty Guidelines. For example, a single person can earn up to $1,215 monthly, while a family of four can earn up to $2,515 monthly and still qualify for the program. These limits are updated annually to reflect cost of living changes.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">Which government assistance programs automatically qualify me?</h3>
+          <p class="text-gray-700 leading-relaxed">
+            Participation in SNAP, Medicaid, SSI, Federal Housing Assistance, or Tribal-specific programs like FDPIR automatically qualifies you. You don't need to prove income separately if you receive any of these benefits - your participation serves as proof of eligibility for a <strong>Free Government Phone</strong>.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">Do I need a Social Security number to apply?</h3>
+          <p class="text-gray-700 leading-relaxed">
+            Yes, you must provide either a Social Security number or Tribal identification number during the application process. This requirement helps prevent fraud and ensures benefits go to eligible individuals who truly need communication assistance.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Application FAQs -->
+    <section class="mb-12">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Navigating the Application Process</h2>
+      
+      <div class="space-y-8">
+        <div class="bg-white rounded-xl shadow-md p-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">How long does the application approval process typically take?</h3>
+          <p class="text-gray-700 leading-relaxed">
+            Most applications are processed within 7-10 business days. You'll receive confirmation

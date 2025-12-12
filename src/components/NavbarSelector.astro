@@ -1,0 +1,35 @@
+---
+/**
+ * Navbar Selector Component
+ * Dynamically selects navbar variant based on Design DNA configuration
+ * 
+ * Variants:
+ *   - standard (default) -> NavbarStandard
+ *   - centered-logo -> NavbarCenteredLogo
+ *   - minimal -> NavbarMinimal
+ *   - floating -> NavbarFloating
+ */
+import { getDesignDNA } from '../lib/site-config';
+
+// Import all navbar variants
+import NavbarStandard from './navbars/NavbarStandard.astro';
+import NavbarCenteredLogo from './navbars/NavbarCenteredLogo.astro';
+import NavbarMinimal from './navbars/NavbarMinimal.astro';
+import NavbarFloating from './navbars/NavbarFloating.astro';
+
+const designDNA = getDesignDNA();
+
+// Get navbar style from advancedLayout, default to 'standard'
+const navStyle = designDNA.advancedLayout?.navStyle || 'standard';
+---
+
+{navStyle === 'standard' && <NavbarStandard />}
+{navStyle === 'centered-logo' && <NavbarCenteredLogo />}
+{navStyle === 'minimal' && <NavbarMinimal />}
+{navStyle === 'floating' && <NavbarFloating />}
+
+
+
+
+
+

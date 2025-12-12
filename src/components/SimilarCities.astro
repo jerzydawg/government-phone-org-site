@@ -1,0 +1,112 @@
+---
+import { getDesignDNA, getDomain } from '../lib/site-config';
+
+export interface Props {
+  currentCityName: string;
+  currentStateAbbr: string;
+  currentPopulation?: number;
+  similarCities: Array<{
+    name: string;
+    state_abbr: string;
+    state_name: string;
+    population?: number;
+  }>;
+}
+
+const { currentCityName, currentStateAbbr, currentPopulation, similarCities } = Astro.props;
+const designDNA = getDesignDNA();
+const domain = getDomain();
+
+// Import slug utility
+import { createCitySlug } from '../lib/slug-utils.js';
+import { getSimilarCitiesTitle, getViewProgramsText, getExploreAllStatesText } from '../lib/microcopy-variations';
+
+// Get microcopy variations
+const similarCitiesTitle = getSimilarCitiesTitle(domain);
+const viewProgramsText = getViewProgramsText(domain);
+const exploreAllStatesText = getExploreAllStatesText(domain);
+
+// Filter to only show cities from different states, limit to 6
+const filteredCities = similarCities
+  .filter(city => city.state_abbr !== currentStateAbbr)
+  .slice(0, 6);
+
+// Don't render if no similar cities
+if (filteredCities.length === 0) {
+  return null;
+}
+---
+
+<section class="py-12 bg-gradient-to-b from-white to-gray-50">
+  <div class="container mx-auto px-4">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8" style={`color: ${designDNA.colors.text};`}>
+        <h2 class="text-3xl font-bold style={`color: ${designDNA.colors.primary};`} mb-2" style={`color: ${designDNA.colors.text};`}>
+          {similarCitiesTitle}
+        </h2>
+        <p class="style={`color: ${designDNA.colors.text};`}">
+          Explore free government phone programs in cities similar to {currentCityName}
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" style={`color: ${designDNA.colors.text};`}>
+        {filteredCities.map((city) => (
+          <a 
+            href={`/${city.state_abbr.toLowerCase()}/${createCitySlug(city.name)}/`}
+            class="group block p-6 bg-white rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200 similar-city-card"
+            aria-label={`View free government phone programs in ${city.name}, ${city.state_abbr}`}
+          >
+            <div class="flex items-start justify-between mb-3" style={`color: ${designDNA.colors.text};`}>
+              <div>
+                <h3 class="font-bold text-lg style={`color: ${designDNA.colors.primary};`} city-name transition-colors" style={`color: ${designDNA.colors.text};`}>
+                  {city.name}
+                </h3>
+                <p class="text-sm style={`color: ${designDNA.colors.text};`}" style={`color: ${designDNA.colors.text};`}>{city.state_name}</p>
+              </div>
+              <span class="text-xs font-bold px-3 py-1 rounded-full" style={`background: ${designDNA.colors.primary}15; color: ${designDNA.colors.primary};`}>
+                {city.state_abbr}
+              </span>
+            </div>
+            
+            {city.population && (
+              <div class="flex items-center text-sm style={`color: ${designDNA.colors.text};`} mb-3" style={`color: ${designDNA.colors.text};`}>
+                <svg class="w-4 h-4 mr-2" style={`color: ${designDNA.colors.text};`} fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                </svg>
+                {city.population.toLocaleString()} residents
+              </div>
+            )}
+            
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-medium view-programs" style={`color: ${designDNA.colors.primary};`}>
+                {viewProgramsText}
+              </p>
+              <svg class="w-5 h-5 group-hover:opacity-80 transition-colors arrow-icon" style={`color: ${designDNA.colors.text};`} fill="none" stroke="currentColor" viewBox="0 0 24 24" style={`color: ${designDNA.colors.primary};`}>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </a>
+        ))}
+      </div>
+      <style define:vars={{ primaryColor: designDNA.colors.primary }}>
+        .similar-city-card:hover { border-color: var(--primaryColor); }
+        .similar-city-card:hover .city-name { color: var(--primaryColor); }
+      </style>
+      
+      <!-- View More States CTA -->
+      <div class="text-center">
+        <a 
+          href="/states/"
+          class="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg hover:opacity-90"
+          style={`background: ${designDNA.gradients.primary};`}
+        >
+          {exploreAllStatesText}
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+

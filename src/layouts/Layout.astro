@@ -1,0 +1,401 @@
+---
+import FooterSelector from '../components/FooterSelector.astro';
+import CountdownTimer from '../components/CountdownTimer.astro';
+// StickyCTA removed - disabled floating bar
+import criticalCSS from '../styles/critical.css?raw';
+import '../styles/global.css';
+import { getSiteConfig, getDesignDNA, getSiteName, getKeyword, getDomain, getSiteURL, getCanonicalURL } from '../lib/site-config';
+import { generateCSSVariables, getGoogleFontsURL } from '../lib/design-dna';
+import { getMobileMenuVariations, getNavVariations, getContentVariations } from '../lib/city-content-variations';
+
+// Get dynamic site configuration
+const siteConfig = getSiteConfig();
+const designDNA = getDesignDNA();
+const siteName = getSiteName();
+const keyword = getKeyword();
+const domain = getDomain();
+const siteURL = getSiteURL();
+
+// Get content variations for this domain
+const mobileMenu = getMobileMenuVariations(domain);
+const navContent = getNavVariations(domain);
+const content = getContentVariations(domain);
+
+// Generate dynamic CSS variables and fonts URL
+const cssVariables = generateCSSVariables(designDNA);
+const fontsURL = getGoogleFontsURL(designDNA);
+
+export interface Props {
+  title: string;
+  description?: string;
+  keywords?: string;
+  image?: string;
+  canonicalURL?: URL;
+}
+
+// Ensure canonical URL is always unique per site
+const defaultCanonicalURL = getCanonicalURL(Astro.url.pathname)
+
+const { 
+  title, 
+  description = `Get your ${keyword.toLowerCase()} today. Check eligibility in 2 minutes. No cost, no hidden fees. ${siteName} helps you access free phone programs.`,
+  keywords = `${keyword.toLowerCase()}, free phone service, lifeline program, ACP program, free phone, government assistance`,
+  image = "/og-image.jpg",
+  canonicalURL = new URL(defaultCanonicalURL)
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+---
+
+<!DOCTYPE html>
+<html lang="en-US" class="scroll-smooth overflow-x-hidden">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    {keywords && <meta name="keywords" content={keywords} />}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Critical CSS Inlined for Faster Rendering -->
+    <style set:html={criticalCSS} />
+    
+    <!-- Dynamic Design DNA CSS Variables -->
+    <style set:html={`:root { ${cssVariables} }`} />
+    
+    <!-- Dynamic Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href={fontsURL} rel="stylesheet" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(image, siteURL)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(image, siteURL)} />
+    <meta name="twitter:image:alt" content={title} />
+    
+    <!-- Additional Meta Tags for Conversion -->
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content={siteName} />
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Optimized Font Loading - Dynamic fonts from Design DNA (30 combinations) -->
+    <link rel="preload" href={fontsURL} as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href={fontsURL} rel="stylesheet"></noscript>
+    
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    
+    <title>{title}</title>
+  </head>
+  
+  <body class="font-sans antialiased bg-white overflow-x-hidden">
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg">
+      Skip to main content
+    </a>
+    
+    <!-- Mobile Slide-out Menu Overlay -->
+    <div id="menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden"></div>
+    
+    <!-- Mobile Slide-out Menu -->
+    <div id="slide-menu" class="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-out md:hidden" aria-label="Navigation menu" role="navigation">
+      <div class="flex flex-col h-full">
+        <!-- Menu Header - Uses dynamic design colors -->
+        <div class="p-6" style={`background: linear-gradient(135deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.secondary} 100%);`}>
+          <div class="flex items-center justify-between mb-4 text-gray-900">
+            <div class="text-white">
+              <h3 class="text-gray-900 text-xl font-bold">{siteName}</h3>
+              <p class="text-gray-900 text-sm text-white">{mobileMenu.tagline}</p>
+            </div>
+            <button id="close-menu" class="text-white hover:text-white transition-colors p-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="bg-white/20 rounded-lg p-3">
+            <p class="text-white text-sm font-medium">{mobileMenu.promoText}</p>
+          </div>
+        </div>
+        
+        <!-- Menu Items - Dynamic from navContent -->
+        <nav class="flex-1 py-6 overflow-y-auto">
+          {navContent.navItems.map((item) => (
+            <a href={item.href} class="mobile-nav-link block px-6 py-4 text-gray-900 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] transition-colors border-b border-gray-100">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {item.href === '/' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />}
+                  {item.href === '/programs' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />}
+                  {item.href === '/eligibility' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                  {item.href === '/providers' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />}
+                  {item.href === '/faq' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                  {item.href === '/contact' && <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />}
+                </svg>
+                <span class="text-gray-900 font-medium ">{item.label}</span>
+              </div>
+            </a>
+          ))}
+        </nav>
+        
+        <!-- Menu Footer -->
+        <div class="p-6 border-t border-gray-200">
+            <a href="/apply" rel="noopener noreferrer" class="block w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-bold py-4 px-6 rounded-xl shadow-lg text-center transition-all transform hover:scale-105 text-shadow-sm">
+            {mobileMenu.ctaButton}
+          </a>
+          <p class="text-gray-900 text-xs  text-center mt-3">{mobileMenu.ctaSubtext}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40 md:hidden">
+      <div class="px-4 py-3">
+        <div class="flex items-center justify-between">
+          <!-- Menu Button -->
+          <button id="mobile-menu-btn" class="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          
+          <!-- Logo -->
+          <a href="/" class="flex items-center">
+            <span class="text-gray-900 font-bold ">{siteName}</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Desktop Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-40 hidden md:block">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo -->
+          <div class="flex items-center">
+            <a href="/" class="flex items-center">
+              <div class="text-xl font-bold text-gray-900">{siteName}</div>
+            </a>
+          </div>
+
+          <!-- Desktop Navigation & CTA - Dynamic from navContent -->
+          <div class="flex items-center space-x-8">
+            {navContent.navItems.map((item) => (
+              <a href={item.href} class="nav-link text-gray-900 font-medium transition-colors duration-200">{item.label}</a>
+            ))}
+            <a href="/apply" rel="noopener noreferrer" class="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-bold py-2 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 text-shadow-sm">{navContent.ctaText}</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Global Scarcity Banner - Appears on ALL 23 pages -->
+    <div class="sticky top-16 z-40 shadow-lg" style={`background: linear-gradient(90deg, ${designDNA.colors.accent}, ${designDNA.colors.primary});`}>
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-center gap-3 md:gap-4 text-white text-center flex-wrap">
+        <span class="font-bold text-sm md:text-base whitespace-nowrap">⚡ Limited Availability</span>
+        <CountdownTimer />
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <!-- Footer - Dynamic based on Design DNA -->
+    <FooterSelector />
+
+    <!-- Sticky CTA disabled - removed floating bar -->
+
+    <!-- Optimized Mobile Menu Script -->
+    <script>
+      // Mobile menu functionality
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const slideMenu = document.getElementById('slide-menu');
+      const menuOverlay = document.getElementById('menu-overlay');
+      const closeMenuBtn = document.getElementById('close-menu');
+      
+      function openMenu() {
+        slideMenu?.classList.remove('-translate-x-full');
+        menuOverlay?.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = 'hidden';
+      }
+      
+      function closeMenu() {
+        slideMenu?.classList.add('-translate-x-full');
+        menuOverlay?.classList.add('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = '';
+      }
+      
+      // Direct event listeners for reliable click handling
+      mobileMenuBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openMenu();
+      });
+      
+      closeMenuBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeMenu();
+      });
+      
+      menuOverlay?.addEventListener('click', () => {
+        closeMenu();
+      });
+      
+      // Close menu when clicking a link inside the menu
+      slideMenu?.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          closeMenu();
+        });
+      });
+      
+      // Close menu on escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeMenu();
+        }
+      });
+    </script>
+
+
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --accent: 136, 58, 234;
+    --accent-light: 224, 204, 250;
+    --accent-dark: 49, 10, 101;
+    --accent-gradient: linear-gradient(45deg, rgb(var(--accent)), rgb(var(--accent-light)) 30%, white 60%);
+  }
+  
+  html {
+    /* Dynamic font from Design DNA - 30 font combinations for uniqueness */
+    font-family: var(--font-body), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    /* Ensure proper text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    body {
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  }
+  
+  /* Premium animations */
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  /* Focus styles for accessibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+  
+  /* Screen reader only class for SEO H1 */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Dynamic hover colors using CSS variables */
+  .nav-link:hover {
+    color: var(--color-primary) !important;
+  }
+  .nav-link-mobile:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 10%, white);
+    color: var(--color-primary) !important;
+  }
+  .nav-link-mobile:active {
+    background-color: color-mix(in srgb, var(--color-primary) 20%, white);
+  }
+  
+  /* State buttons dynamic hover */
+  .state-btn:hover {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+    border-color: var(--color-primary) !important;
+  }
+  
+  /* Footer state links */
+  .footer-state-link:hover {
+    background-color: var(--color-primary) !important;
+  }
+  
+  /* Dynamic link colors */
+  .dynamic-link {
+    color: var(--color-primary);
+  }
+  .dynamic-link:hover {
+    opacity: 0.8;
+  }
+</style> 

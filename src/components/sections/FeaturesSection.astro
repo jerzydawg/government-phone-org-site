@@ -1,0 +1,68 @@
+---
+/**
+ * Features/Benefits Section
+ * Shows why choose us benefits
+ */
+import { getDesignDNA, getSiteName, getDomain, getKeywordId } from '../../lib/site-config';
+import { getContentVariations, getFeaturesSectionVariations } from '../../lib/city-content-variations';
+import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
+
+const designDNA = getDesignDNA();
+const siteName = getSiteName();
+const domain = getDomain();
+const keywordId = getKeywordId();
+
+const content = getContentVariations(domain);
+const features = getFeaturesSectionVariations(domain, siteName);
+
+// Load keyword-specific H2 variations with error handling
+let sectionH2 = { h2: 'Key Features & Benefits' };
+try {
+  const { getH2Variation } = await loadKeywordVariations(keywordId);
+  const result = getH2Variation(domain, 'features');
+  if (result && result.h2) { sectionH2 = result; }
+} catch (e) {
+  console.error('Failed to load keyword variations for Features:', e);
+  // Will use fallback h2 above
+}
+---
+
+<section class="py-12 md:py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12" style={`color: ${designDNA.colors.text};`}>
+      {sectionH2.h2}
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={`background-color: ${designDNA.colors.primary}20;`}>
+          <span class="text-2xl" style={`color: ${designDNA.colors.text};`}>{content.icons.money}</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2" style={`color: ${designDNA.colors.text};`}>{content.featureTitles.noCost}</h3>
+        <p class="" style={`color: ${designDNA.colors.text};`}>{features.feature1Description}</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={`background-color: ${designDNA.colors.accent}20;`}>
+          <span class="text-2xl" style={`color: ${designDNA.colors.text};`}>{content.icons.phone}</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2" style={`color: ${designDNA.colors.text};`}>{content.featureTitles.freePhone}</h3>
+        <p class="" style={`color: ${designDNA.colors.text};`}>{features.feature2Description}</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={`background-color: ${designDNA.colors.secondary}20;`}>
+          <span class="text-2xl" style={`color: ${designDNA.colors.text};`}>🌐</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2" style={`color: ${designDNA.colors.text};`}>{content.featureTitles.connectivity}</h3>
+        <p class="" style={`color: ${designDNA.colors.text};`}>{features.feature3Description}</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={`background-color: ${designDNA.colors.accent}20;`}>
+          <span class="text-2xl" style={`color: ${designDNA.colors.text};`}>{content.icons.speed}</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2" style={`color: ${designDNA.colors.text};`}>{content.featureTitles.approval}</h3>
+        <p class="" style={`color: ${designDNA.colors.text};`}>{features.feature4Description}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+

@@ -1,0 +1,127 @@
+---
+import { getDesignDNA, getKeyword, getDomain } from '../lib/site-config';
+import { getContentVariations } from '../lib/city-content-variations';
+import { getLimitedTimeStickyText } from '../lib/microcopy-variations';
+
+const designDNA = getDesignDNA();
+const keyword = getKeyword();
+const domain = getDomain();
+const content = getContentVariations(domain);
+const limitedTimeText = getLimitedTimeStickyText(domain);
+
+// Smart keyword formatting - avoid"Get Your my gov phone" grammar issues
+const keywordLower = keyword.toLowerCase();
+const keywordDisplay = keywordLower.startsWith('my ') || keywordLower.startsWith('your ') || keywordLower.startsWith('a ') || keywordLower.startsWith('the ')
+  ? keyword
+  : `Your ${keyword}`;
+---
+
+<!-- Desktop Sticky Bar -->
+<div class="hidden md:block fixed bottom-0 left-0 right-0 z-50 transform translate-y-full transition-transform duration-300" id="sticky-cta">
+  <div class="shadow-2xl border-t-4 border-yellow-400" style={`background: linear-gradient(90deg, ${designDNA.colors.primary} 0%, ${designDNA.colors.secondary} 100%);`}>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Left Side - Offer -->
+        <div class="flex items-center space-x-6">
+          <!-- Urgency Timer -->
+          <div class="bg-red-500 text-white px-4 py-2 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <span class="font-semibold" style={`color: ${designDNA.colors.text};`}>{limitedTimeText}</span>
+            </div>
+          </div>
+          
+          <!-- Main Message - Dynamic -->
+          <div class="text-white">
+            <p class="text-lg font-bold" style={`color: ${designDNA.colors.text};`}>
+              Get {keywordDisplay} Today! 
+              <span class="text-yellow-300">{content.valueProps[2]}</span>
+            </p>
+            <p class="text-sm opacity-80 text-white" style={`color: ${designDNA.colors.text};`}>
+              {content.trustBadges[0]} • {content.trustBadges[1]} • {content.trustBadges[2]}
+            </p>
+          </div>
+        </div>
+        
+        <!-- Right Side - CTA -->
+        <div class="flex items-center space-x-4">
+          <div class="text-right hidden lg:block">
+            <p class="text-yellow-300 font-bold text-lg">{content.heroStats.stat2.value}</p>
+            <p class="text-white text-sm">{content.heroStats.stat2.label}</p>
+          </div>
+          
+          <a href="/apply" rel="noopener noreferrer" class="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap text-shadow-sm" style={`color: ${designDNA.colors.text};`}>
+            {content.ctaButton} →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Deployment trigger: trivial comment
+  // Optimized sticky bar scroll behavior with throttling
+  let scrollTimeout;
+  const stickyCta = document.getElementById('sticky-cta');
+  
+  function handleScroll() {
+    if (window.innerWidth >= 768 && stickyCta) {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      if (scrollTop > 300) {
+        stickyCta.classList.remove('translate-y-full');
+      } else {
+        stickyCta.classList.add('translate-y-full');
+      }
+    }
+  }
+  
+  // Throttled scroll listener for better performance
+  window.addEventListener('scroll', () => {
+    if (scrollTimeout) return;
+    scrollTimeout = setTimeout(() => {
+      handleScroll();
+      scrollTimeout = null;
+    }, 16); // ~60fps
+  });
+
+  // Simplified countdown timer with reduced DOM updates
+  let countdownInterval;
+  function startCountdown() {
+    const countdownElement = document.getElementById('sticky-countdown');
+    if (!countdownElement) return;
+    
+    let [hours, minutes, seconds] = countdownElement.textContent.split(':').map(Number);
+    
+    countdownInterval = setInterval(() => {
+      if (seconds > 0) {
+        seconds--;
+      } else if (minutes > 0) {
+        minutes--;
+        seconds = 59;
+      } else if (hours > 0) {
+        hours--;
+        minutes = 59;
+        seconds = 59;
+      } else {
+        // Reset countdown
+        hours = 5;
+        minutes = 59;
+        seconds = 0;
+      }
+
+      countdownElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  // Start countdown when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startCountdown);
+  } else {
+    startCountdown();
+  }
+</script>
+
+<style>
+  /* Only keep styles relevant to the desktop sticky bar */
+</style> 

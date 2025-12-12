@@ -1,0 +1,494 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import AboveFoldCTA from '../../components/AboveFoldCTA.astro';
+import { supabase, createClient } from "../../lib/supabase";
+import { createCitySlug } from '../../lib/slug-utils.js';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import RegionalStates from '../../components/RegionalStates.astro';
+import RelatedContent from '../../components/RelatedContent.astro';
+import { getSiteURL, getDomain, getKeywordId, getSiteName, getDesignDNA } from '../../lib/site-config';
+import { getStateContentVariations } from '../../lib/state-content-variations';
+import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
+
+const SITE_URL = getSiteURL();
+const DOMAIN = getDomain();
+const SITE_NAME = getSiteName();
+const keywordId = getKeywordId(); // Already has fallback in getKeywordId() function
+const designDNA = getDesignDNA();
+
+// Load keyword-specific variations for state pages with error handling
+let getH3Variation: any = null;
+let getMetaVariations: any = null;
+try {
+  const keywordModule = await loadKeywordVariations(keywordId);
+  if (keywordModule && typeof keywordModule.getH3Variation === 'function') {
+    getH3Variation = keywordModule.getH3Variation;
+  }
+  if (keywordModule && typeof keywordModule.getMetaVariations === 'function') {
+    getMetaVariations = keywordModule.getMetaVariations;
+  }
+} catch (e: any) {
+  console.error('Failed to load keyword variations for state page:', e?.message || e);
+  // Fallback: create a simple H3 function
+  getH3Variation = () => ({ h3: 'Free Government Phone' });
+}
+
+// Get state from URL params
+const { state } = Astro.params;
+const stateUpper = state?.toUpperCase();
+
+// Validate required params
+if (!state) {
+  return Astro.redirect('/404');
+}
+
+// Initialize variables
+let stateData = null;
+let stateError = null;
+let cities = [];
+let seoTitle = '';
+let seoDescription = '';
+let seoKeywords = '';
+let structuredData = {};
+
+// Initialize Supabase client with error handling
+try {
+  // Check if Supabase is available
+  if (!supabase) {
+    stateData = getFallbackStateData(stateUpper);
+    cities = getFallbackCities(stateUpper);
+    // Generate SEO content for fallback data using variations if available
+    if (stateData && getMetaVariations) {
+      try {
+        const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+        seoTitle = metaContent.title;
+        seoDescription = metaContent.description;
+      } catch (metaError: any) {
+        console.error('Error getting meta variations for state page (no Supabase):', metaError?.message || metaError);
+        // Fallback to hardcoded values
+        seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+      }
+    } else if (stateData) {
+      // Fallback to hardcoded values if variations not available
+      seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+      seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+    }
+  } else {
+    // Fetch state data
+    const { data, error } = await supabase
+      .from('states')
+      .select('*')
+      .eq('abbreviation', stateUpper)
+      .maybeSingle();
+    
+    stateData = data;
+    stateError = error;
+    
+    // If Supabase returns an error or no data, use fallback data
+    if (stateError || !stateData) {
+      // Only log actual errors, not null values
+      if (stateError) {
+        console.error('Supabase error fetching state data:', stateError);
+      }
+      stateData = getFallbackStateData(stateUpper);
+      cities = getFallbackCities(stateUpper);
+      // Generate SEO content for fallback data using variations if available
+      if (stateData && getMetaVariations) {
+        try {
+          const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+          seoTitle = metaContent.title;
+          seoDescription = metaContent.description;
+        } catch (metaError: any) {
+          console.error('Error getting meta variations for state page (Supabase error):', metaError?.message || metaError);
+          // Fallback to hardcoded values
+          seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+          seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+        }
+      } else if (stateData) {
+        // Fallback to hardcoded values if variations not available
+        seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+      }
+    } else {
+      // Generate SEO content using keyword variations
+      if (getMetaVariations) {
+        try {
+          const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+          seoTitle = metaContent.title;
+          seoDescription = metaContent.description;
+        } catch (metaError: any) {
+          console.error('Error getting meta variations for state page:', metaError?.message || metaError);
+          // Fallback to hardcoded values
+          seoTitle = `Free Government Phone ${stateData.name} | Access FREE Government Phone Service 2025`;
+          seoDescription = `Access federal communication assistance programs in ${stateData.name}. Apply for ACP, Lifeline, and other federal programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+        }
+      } else {
+        // Fallback to hardcoded values if variations not available
+        seoTitle = `Free Government Phone ${stateData.name} | Access FREE Government Phone Service 2025`;
+        seoDescription = `Access federal communication assistance programs in ${stateData.name}. Apply for ACP, Lifeline, and other federal programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+      }
+      seoKeywords = `federal communication assistance ${stateData.name}, ${stateData.name} federal communication, free communication ${stateData.name}, ACP ${stateData.name}, Lifeline ${stateData.name}`;
+      
+      // Generate structured data
+      structuredData = {
+        "@context": "https://schema.org",
+        "@type": "State",
+        "name": stateData.name,
+        "address": {
+          "@type": "PostalAddress",
+          "addressRegion": stateData.abbreviation,
+          "addressCountry": "US"
+        },
+        "description": `Federal communication assistance programs available in ${stateData.name}`,
+        "url": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
+      };
+      
+      // Get cities in this state
+      try {
+        const { data: citiesData, error: citiesError } = await supabase
+          .from('cities')
+          .select('*')
+          .eq('state_id', stateData.id)
+          .order('population', { ascending: false })
+          .limit(20);
+        
+        if (!citiesError && citiesData) {
+          // Filter out cities that don't belong to this state
+          const correctCities = citiesData.filter(city => {
+            // Known incorrect mappings to fix
+            const incorrectMappings = {
+              'GA': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth', 'Arlington', 'Plano', 'Lubbock', 'Laredo', 'Amarillo'],
+              'TX': ['Atlanta', 'Augusta', 'Columbus', 'Macon', 'Savannah', 'Athens', 'Sandy Springs', 'Roswell', 'Albany'],
+              'CA': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus'],
+              'NY': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus'],
+              'FL': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus']
+            };
+            
+            const incorrectCitiesForState = incorrectMappings[stateData.abbreviation] || [];
+            return !incorrectCitiesForState.includes(city.name);
+          });
+          
+          cities = correctCities;
+          
+          // If no cities found after filtering, provide fallback data
+          if (cities.length === 0) {
+            cities = getFallbackCities(stateData.abbreviation);
+          }
+        } else {
+          console.error('Error fetching cities:', citiesError);
+          // Use fallback data on error
+          cities = getFallbackCities(stateData.abbreviation);
+        }
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+        // Use fallback data on error
+        cities = getFallbackCities(stateData.abbreviation);
+      }
+    }
+  }
+  
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  // Use fallback data instead of redirecting
+  stateData = getFallbackStateData(stateUpper);
+  cities = getFallbackCities(stateUpper);
+  
+  // Generate SEO content for fallback data using variations if available
+  if (stateData) {
+    if (getMetaVariations) {
+      try {
+        const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+        seoTitle = metaContent.title;
+        seoDescription = metaContent.description;
+      } catch (metaError: any) {
+        console.error('Error getting meta variations for fallback state page:', metaError?.message || metaError);
+        // Fallback to hardcoded values
+        seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+        seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+      }
+    } else {
+      // Fallback to hardcoded values if variations not available
+      seoTitle = `Free Government Phone ${stateData.name} | Get FREE Phone Service 2025`;
+      seoDescription = `Get your FREE Government Phone in ${stateData.name}. Apply for ACP, Lifeline, and other government programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+    }
+    seoKeywords = `free government phone ${stateData.name}, ${stateData.name} government phone, free phone ${stateData.name}, ACP ${stateData.name}, Lifeline ${stateData.name}`;
+    
+    // Generate structured data
+    structuredData = {
+      "@context": "https://schema.org",
+      "@type": "State",
+      "name": stateData.name,
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": stateData.abbreviation,
+        "addressCountry": "US"
+      },
+      "description": `Government phone programs available in ${stateData.name}`,
+      "url": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
+    };
+  }
+}
+
+// Fallback cities function
+function getFallbackCities(stateAbbr) {
+  const fallbackCities = {
+    'GA': [
+      { name: 'Atlanta', population: 498715 },
+      { name: 'Augusta', population: 202081 },
+      { name: 'Columbus', population: 195769 },
+      { name: 'Macon', population: 153159 },
+      { name: 'Savannah', population: 147780 },
+      { name: 'Athens', population: 127315 },
+      { name: 'Sandy Springs', population: 108080 },
+      { name: 'Roswell', population: 94844 },
+      { name: 'Albany', population: 69019 },
+      { name: 'Johns Creek', population: 84579 }
+    ],
+    'TX': [
+      { name: 'Houston', population: 2320268 },
+      { name: 'San Antonio', population: 1547253 },
+      { name: 'Dallas', population: 1343573 },
+      { name: 'Austin', population: 978908 },
+      { name: 'Fort Worth', population: 918915 },
+      { name: 'Arlington', population: 398112 },
+      { name: 'Plano', population: 285494 },
+      { name: 'Lubbock', population: 257141 },
+      { name: 'Laredo', population: 255205 },
+      { name: 'Amarillo', population: 199924 }
+    ],
+    'CA': [
+      { name: 'Los Angeles', population: 3979576 },
+      { name: 'San Diego', population: 1423851 },
+      { name: 'San Jose', population: 1030119 },
+      { name: 'San Francisco', population: 873965 },
+      { name: 'Fresno', population: 542107 },
+      { name: 'Sacramento', population: 513624 },
+      { name: 'Long Beach', population: 466742 },
+      { name: 'Oakland', population: 440646 },
+      { name: 'Bakersfield', population: 403455 },
+      { name: 'Anaheim', population: 346824 }
+    ],
+    'NY': [
+      { name: 'New York', population: 8336817 },
+      { name: 'Buffalo', population: 255284 },
+      { name: 'Rochester', population: 205695 },
+      { name: 'Yonkers', population: 200370 },
+      { name: 'Syracuse', population: 142749 },
+      { name: 'Albany', population: 100826 },
+      { name: 'New Rochelle', population: 79226 },
+      { name: 'Mount Vernon', population: 72725 },
+      { name: 'Schenectady', population: 66135 },
+      { name: 'Utica', population: 60100 }
+    ],
+    'FL': [
+      { name: 'Jacksonville', population: 949611 },
+      { name: 'Miami', population: 442241 },
+      { name: 'Tampa', population: 384959 },
+      { name: 'Orlando', population: 307573 },
+      { name: 'St. Petersburg', population: 258308 },
+      { name: 'Hialeah', population: 223109 },
+      { name: 'Tallahassee', population: 194500 },
+      { name: 'Fort Lauderdale', population: 182595 },
+      { name: 'Port St. Lucie', population: 195248 },
+      { name: 'Cape Coral', population: 194016 }
+    ]
+  };
+  
+  return fallbackCities[stateAbbr] || [];
+}
+
+// Fallback state data function
+function getFallbackStateData(stateAbbr) {
+  const fallbackStates = {
+    'GA': { name: 'Georgia', abbreviation: 'GA', id: 1 },
+    'TX': { name: 'Texas', abbreviation: 'TX', id: 2 },
+    'CA': { name: 'California', abbreviation: 'CA', id: 3 },
+    'NY': { name: 'New York', abbreviation: 'NY', id: 4 },
+    'FL': { name: 'Florida', abbreviation: 'FL', id: 5 }
+  };
+  
+  return fallbackStates[stateAbbr] || null;
+}
+
+// If no state data found, redirect to 404
+if (!stateData) {
+  return Astro.redirect('/404');
+}
+
+// Get domain-based content variations for unique content across 1000+ sites
+const variations = getStateContentVariations(DOMAIN, stateData.name, stateData.abbreviation);
+const canonicalURL = `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`;
+---
+
+<Layout
+  title={seoTitle}
+  description={seoDescription}
+  keywords={seoKeywords}
+  canonicalURL={canonicalURL}
+>
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  
+  <!-- Breadcrumb Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": `${SITE_URL}/`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": stateData.name,
+        "item": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
+      }
+    ]
+  })} />
+  
+  <!-- Enhanced Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": `How do I get a free government phone in ${stateData?.name || stateUpper}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `Residents of ${stateData?.name || stateUpper} can qualify for a free government phone by meeting income requirements or participating in federal assistance programs. Apply online for instant approval.`
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `What programs are available in ${stateData?.name || stateUpper}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `The Lifeline and Affordable Connectivity Program (ACP) are available in ${stateData?.name || stateUpper}, offering free phone and internet service to eligible residents.`
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `Can I get free internet in ${stateData?.name || stateUpper}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `Yes, the ACP program provides free or discounted internet service in ${stateData?.name || stateUpper} for qualifying households.`
+        }
+      }
+    ]
+  })} />
+
+  <main class="min-h-screen bg-gray-50">
+    <!-- Breadcrumb Navigation -->
+    <Breadcrumbs items={[
+      { label: 'Home', href: '/' },
+      { label: stateData.name }
+    ]} />
+    
+    <!-- Hero Section - Domain-based unique content -->
+    <section style={`background: linear-gradient(135deg, ${designDNA.colors.primary}, ${designDNA.colors.secondary});`} class="text-white py-10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+          <h1 class="text-gray-900 text-4xl md:text-6xl font-bold mb-6 ">
+            {variations.headingIntro}
+          </h1>
+          <p class="text-gray-900 text-xl md:text-2xl mb-8 text-white" set:html={variations.intro} />
+
+          <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <a href="/apply" rel="noopener noreferrer" style={`color: ${designDNA.colors.primary};`} class="bg-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block text-center">
+              Check Eligibility
+            </a>
+            <a href="/apply" rel="noopener noreferrer" style={`border-color: white;`} class="border-2 text-white px-8 py-3 rounded-lg font-semibold hover:bg-white transition-colors inline-block text-center" onmouseover={`this.style.color='${designDNA.colors.primary}';`} onmouseout="this.style.color='white';">
+              View Programs
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Programs Section - Domain-based unique content -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-gray-900 text-3xl font-bold text-center mb-8 ">Available Programs</h2>
+          <p class="text-gray-900 text-center mb-8 " set:html={variations.programsAvailable} />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-50 p-6 rounded-lg">
+              <h3 class="text-gray-900 text-2xl font-bold mb-4" style={`color: ${designDNA.colors.primary};`}>{getH3Variation(`${DOMAIN}-${state}`, 'state-program-1').h3}</h3>
+              <p class="text-gray-900 mb-4 ">
+                Get up to $30/month off your internet bill and a one-time $100 discount on a device.
+              </p>
+              <a href="/apply" rel="noopener noreferrer" style={`color: ${designDNA.colors.primary};`} class="font-semibold hover:underline">Learn More →</a>
+            </div>
+            <div class="bg-gray-50 p-6 rounded-lg">
+              <h3 class="text-gray-900 text-2xl font-bold text-green-600 mb-4">{getH3Variation(`${DOMAIN}-${state}`, 'state-program-2').h3}</h3>
+              <p class="text-gray-900 mb-4 ">
+                Receive a free phone and monthly service discount for eligible low-income households.
+              </p>
+              <a href="/apply" rel="noopener noreferrer" class="text-green-600 font-semibold hover:underline">Learn More →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cities Section - Domain-based unique content -->
+    {cities.length > 0 && (
+      <section class="py-12 bg-gray-50">
+        <div class="container mx-auto px-4">
+          <div class="max-w-4xl mx-auto">
+            <h2 class="text-gray-900 text-3xl font-bold text-center mb-8 ">{variations.headingCities}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {cities.map((city) => (
+                <a 
+                  href={`/${state}/${createCitySlug(city.name)}/`}
+                  class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <h3 class="text-gray-900 font-semibold text-lg mb-2 ">{city.name}</h3>
+                  <p class="text-gray-900 text-sm">
+                    {city.population ? `${city.population.toLocaleString()} residents` : 'N/A'}
+                  </p>
+                </a>
+              ))}
+            </div>
+            
+            <!-- View All Cities CTA -->
+            <div class="text-center mt-8">
+              <a 
+                href={`/${stateData.abbreviation.toLowerCase()}/all/`}
+                style={`background: ${designDNA.colors.primary};`} class="inline-flex items-center justify-center px-6 py-3 text-white font-semibold rounded-lg transition-colors text-center" onmouseover={`this.style.background='${designDNA.colors.secondary}';`} onmouseout={`this.style.background='${designDNA.colors.primary}';`}
+              >
+                View All Cities in {stateData.name}
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- CTA Section - Domain-based unique content -->
+    <section style={`background: ${designDNA.colors.primary};`} class="py-10 text-white">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-gray-900 text-3xl font-bold mb-6 ">{variations.cta.headline}</h2>
+        <p class="text-gray-900 text-xl mb-8 ">{variations.cta.subtext}</p>
+        <a href="/apply" rel="noopener noreferrer" style={`color: ${designDNA.colors.primary};`} class="bg-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors inline-block text-center">
+          {variations.cta.button}
+        </a>
+      </div>
+    </section>
+
+    <!-- Regional States Section -->
+    <RegionalStates currentState={stateData.abbreviation} currentStateName={stateData.name} />
+
+    <!-- Related Content Section -->
+    <RelatedContent currentPage="state" currentState={stateData.abbreviation} />
+  </main>
+</Layout> 
