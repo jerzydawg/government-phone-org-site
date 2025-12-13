@@ -30,7 +30,7 @@ export interface SiteConfig {
 // ===== SITE CONFIG - REPLACED AT BUILD TIME =====
 // DO NOT MODIFY THIS SECTION MANUALLY - IT IS AUTO-GENERATED
 const SITE_CONFIG_DATA = {
-  domain: "example.com",
+  domain: "government-phone.org",
   siteName: "Free Phone Service",
   keyword: "Free Government Phone",
   keywordId: "free-government-phone",
