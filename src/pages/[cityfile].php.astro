@@ -1,0 +1,48 @@
+---
+/**
+ * PHP-style routing for city pages
+ * Format: /city-state.php (e.g., /paducah-ky.php)
+ * This route handles both:
+ * 1. Path-based: domain.com/city-state.php
+ * 2. Subdomain: state.domain.com/city-state.php
+ */
+import { parseSubdomain } from '../lib/site-config';
+
+export const prerender = false;
+
+// Get the filename from URL params
+const { cityfile } = Astro.params;
+const hostname = Astro.request.headers.get('host') || '';
+
+// Parse the filename: paducah-ky -> city=paducah, state=ky
+// The last hyphen separates city from state abbreviation
+if (!cityfile || typeof cityfile !== 'string') {
+  return Astro.redirect('/404');
+}
+
+const lastHyphenIndex = cityfile.lastIndexOf('-');
+if (lastHyphenIndex === -1 || lastHyphenIndex === cityfile.length - 1) {
+  return Astro.redirect('/404');
+}
+
+const citySlug = cityfile.substring(0, lastHyphenIndex);
+const stateAbbr = cityfile.substring(lastHyphenIndex + 1);
+
+// Validate state abbreviation (must be 2 characters)
+if (stateAbbr.length !== 2) {
+  return Astro.redirect('/404');
+}
+
+// Check if we're on a state subdomain
+const subdomainInfo = parseSubdomain(hostname);
+
+// If subdomain is present, validate it matches the file's state
+if (subdomainInfo && subdomainInfo.stateAbbr.toLowerCase() !== stateAbbr.toLowerCase()) {
+  // Subdomain doesn't match file state - redirect to correct subdomain
+  return Astro.redirect('/404');
+}
+
+// Rewrite to the actual city page route: /state/city/
+const rewritePath = `/${stateAbbr.toLowerCase()}/${citySlug}/`;
+return Astro.rewrite(rewritePath);
+---

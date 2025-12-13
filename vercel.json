@@ -5,11 +5,22 @@
       "has": [
         {
           "type": "host",
-          "value": "www.(?<domain>.*)"
+          "value": "www.free-government-phone.net"
         }
       ],
-      "destination": "https://:domain/:path*",
+      "destination": "https://free-government-phone.net/:path*",
       "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=86400, stale-while-revalidate=604800"
+        }
+      ]
     }
   ]
 }

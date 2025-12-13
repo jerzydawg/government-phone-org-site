@@ -24,31 +24,38 @@ export const onRequest = async (context: any, next: any) => {
   // If subdomains are enabled, validate subdomain format
   if (useSubdomains() && isSubdomain) {
     const subdomainInfo = parseSubdomain(host);
-    const subdomainPart = host.split('.')[0];
-    
-    // Check if it's a state subdomain (2-letter abbreviation, e.g., "nj")
-    const isStateSubdomain = subdomainPart.length === 2 && /^[a-z]{2}$/.test(subdomainPart);
-    
-    // Check if this is an internal rewrite (Astro.rewrite() from index.astro)
-    // These paths are state/city paths that should be allowed through
-    const isInternalRewrite = url.pathname.match(/^\/([a-z]{2})\/?$/) || 
-                              url.pathname.match(/^\/([a-z]{2})\/([a-z0-9-]+)\/?$/);
-    
-    // If it's a valid city or state subdomain
-    if (subdomainInfo || isStateSubdomain) {
-      // Allow internal rewrites to pass through to [state] and [state]/[city] routes
-      if (isInternalRewrite) {
+
+    // Check if this is a valid state subdomain
+    if (subdomainInfo) {
+      // Check if this is an internal rewrite (Astro.rewrite() from index.astro or .php routes)
+      // These paths are state/city paths that should be allowed through
+      const isInternalRewrite = url.pathname.match(/^\/([a-z]{2})\/?$/) ||
+                                url.pathname.match(/^\/([a-z]{2})\/([a-z0-9-]+)\/?$/);
+
+      // Check if this is a .php city page (e.g., /paducah-ky.php)
+      const isPhpCityPage = url.pathname.match(/^\/([a-z0-9-]+)-([a-z]{2})\.php$/);
+
+      // Allow internal rewrites and .php city pages
+      if (isInternalRewrite || isPhpCityPage) {
         return next();
       }
-      
-      // Redirect any other path to root (keeps URLs clean)
-      if (url.pathname !== '/') {
-        const subdomainRoot = `https://${host}/`;
-        return context.redirect(subdomainRoot, 301);
+
+      // Allow root path (homepage rewrite will handle)
+      if (url.pathname === '/') {
+        return next();
       }
-      
-      // Valid subdomain at root - allow through (index.astro will handle via rewrite)
-      return next();
+
+      // Allow static pages (no extension, not state/city format)
+      const isStaticPage = !url.pathname.includes('.') &&
+                           !url.pathname.match(/^\/([a-z]{2})\/?/) &&
+                           !url.pathname.match(/^\/([a-z]{2})\/([a-z0-9-]+)/);
+      if (isStaticPage) {
+        return next();
+      }
+
+      // Redirect any other path to root (keeps URLs clean)
+      const subdomainRoot = `https://${host}/`;
+      return context.redirect(subdomainRoot, 301);
     }
     // Invalid subdomain - let route handler return 404
   }

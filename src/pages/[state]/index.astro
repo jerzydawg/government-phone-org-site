@@ -7,7 +7,7 @@ import { createCitySlug } from '../../lib/slug-utils.js';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import RegionalStates from '../../components/RegionalStates.astro';
 import RelatedContent from '../../components/RelatedContent.astro';
-import { getSiteURL, getDomain, getKeywordId, getSiteName, getDesignDNA, useSubdomains, getStateSubdomainURL } from '../../lib/site-config';
+import { getSiteURL, getDomain, getKeywordId, getSiteName, getDesignDNA, useSubdomains, getStateSubdomainURL, parseSubdomain } from '../../lib/site-config';
 import { getStateContentVariations } from '../../lib/state-content-variations';
 import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
 
@@ -16,6 +16,17 @@ const DOMAIN = getDomain();
 const SITE_NAME = getSiteName();
 const keywordId = getKeywordId(); // Already has fallback in getKeywordId() function
 const designDNA = getDesignDNA();
+
+// SECURITY: Block incorrect routing patterns when subdomain mode is enabled
+if (useSubdomains()) {
+  const hostname = Astro.request.headers.get('host') || '';
+  const subdomainInfo = parseSubdomain(hostname);
+
+  if (!subdomainInfo) {
+    // Direct path access without subdomain - block it
+    return Astro.redirect('/404', 404);
+  }
+}
 
 // Load keyword-specific variations for state pages with error handling
 let getH3Variation: any = null;
@@ -44,9 +55,8 @@ if (!state) {
 }
 
 // Initialize variables
-let stateData = null;
-let stateError = null;
-let cities = [];
+let stateData: any = null;
+let cities: any[] = [];
 let seoTitle = '';
 let seoDescription = '';
 let seoKeywords = '';
@@ -56,105 +66,82 @@ let structuredData = {};
 try {
   // Check if Supabase is available
   if (!supabase) {
-    // No Supabase - return 404 (no fallback data to prevent duplicate content)
     return Astro.redirect('/404');
-  } else {
-    // Fetch state data
-    const { data, error } = await supabase
-      .from('states')
-      .select('*')
-      .eq('abbreviation', stateUpper)
-      .maybeSingle();
-    
-    stateData = data;
-    stateError = error;
-    
-    // If Supabase returns an error or no data, return 404 (no fallback data)
-    if (stateError || !stateData) {
-      // Only log actual errors, not null values
-      if (stateError) {
-        console.error('Supabase error fetching state data:', stateError);
-      }
-      return Astro.redirect('/404');
-    } else {
-      // Generate SEO content using keyword variations
-      if (getMetaVariations) {
-        try {
-          const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
-          seoTitle = metaContent.title;
-          seoDescription = metaContent.description;
-        } catch (metaError: any) {
-          console.error('Error getting meta variations for state page:', metaError?.message || metaError);
-          // Fallback to hardcoded values
-          seoTitle = `Free Government Phone ${stateData.name} | Access FREE Government Phone Service 2025`;
-          seoDescription = `Access federal communication assistance programs in ${stateData.name}. Apply for ACP, Lifeline, and other federal programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-        }
-      } else {
-        // Fallback to hardcoded values if variations not available
-        seoTitle = `Free Government Phone ${stateData.name} | Access FREE Government Phone Service 2025`;
-        seoDescription = `Access federal communication assistance programs in ${stateData.name}. Apply for ACP, Lifeline, and other federal programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
-      }
-      seoKeywords = `federal communication assistance ${stateData.name}, ${stateData.name} federal communication, free communication ${stateData.name}, ACP ${stateData.name}, Lifeline ${stateData.name}`;
-      
-      // Generate structured data
-      structuredData = {
-        "@context": "https://schema.org",
-        "@type": "State",
-        "name": stateData.name,
-        "address": {
-          "@type": "PostalAddress",
-          "addressRegion": stateData.abbreviation,
-          "addressCountry": "US"
-        },
-        "description": `Federal communication assistance programs available in ${stateData.name}`,
-        "url": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
-      };
-      
-      // Get cities in this state
-      try {
-        const { data: citiesData, error: citiesError } = await supabase
-          .from('cities')
-          .select('*')
-          .eq('state_id', stateData.id)
-          .order('population', { ascending: false })
-          .limit(20);
-        
-        if (!citiesError && citiesData) {
-          // Filter out cities that don't belong to this state
-          const correctCities = citiesData.filter(city => {
-            // Known incorrect mappings to fix
-            const incorrectMappings = {
-              'GA': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth', 'Arlington', 'Plano', 'Lubbock', 'Laredo', 'Amarillo'],
-              'TX': ['Atlanta', 'Augusta', 'Columbus', 'Macon', 'Savannah', 'Athens', 'Sandy Springs', 'Roswell', 'Albany'],
-              'CA': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus'],
-              'NY': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus'],
-              'FL': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus']
-            };
-            
-            const incorrectCitiesForState = incorrectMappings[stateData.abbreviation] || [];
-            return !incorrectCitiesForState.includes(city.name);
-          });
-          
-          cities = correctCities;
-          
-          // If no cities found after filtering, provide fallback data
-          if (cities.length === 0) {
-            cities = getFallbackCities(stateData.abbreviation);
-          }
-        } else {
-          console.error('Error fetching cities:', citiesError);
-          cities = [];
-        }
-      } catch (error) {
-        console.error('Error fetching cities:', error);
-        cities = [];
-      }
-    }
   }
-  
+
+  // Query 1: Get state data
+  const { data: stateResult, error: stateError } = await supabase
+    .from('states')
+    .select('id, name, abbreviation, region')
+    .eq('abbreviation', stateUpper)
+    .maybeSingle();
+
+  if (stateError || !stateResult) {
+    if (stateError) {
+      console.error('Supabase error fetching state data:', stateError);
+    }
+    return Astro.redirect('/404');
+  }
+
+  stateData = stateResult;
+
+  // Query 2: Get cities for this state (parallel-safe, runs after state is found)
+  const { data: citiesData, error: citiesError } = await supabase
+    .from('cities')
+    .select('id, name, population, county')
+    .eq('state_id', stateData.id)
+    .order('population', { ascending: false })
+    .limit(25);
+
+  if (!citiesError && citiesData) {
+    // Known incorrect mappings to filter out
+    const incorrectMappings: Record<string, string[]> = {
+      'GA': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth', 'Arlington', 'Plano', 'Lubbock', 'Laredo', 'Amarillo'],
+      'TX': ['Atlanta', 'Augusta', 'Columbus', 'Macon', 'Savannah', 'Athens', 'Sandy Springs', 'Roswell', 'Albany'],
+      'CA': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus'],
+      'NY': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus'],
+      'FL': ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Atlanta', 'Augusta', 'Columbus']
+    };
+
+    const incorrectCitiesForState = incorrectMappings[stateData.abbreviation] || [];
+    cities = citiesData
+      .filter((city: any) => !incorrectCitiesForState.includes(city.name))
+      .slice(0, 20);
+  }
+
+  // Generate SEO content using keyword variations
+  if (getMetaVariations) {
+    try {
+      const metaContent = getMetaVariations(SITE_NAME, DOMAIN, 'state', stateData.name);
+      seoTitle = metaContent.title;
+      seoDescription = metaContent.description;
+    } catch (metaError: any) {
+      console.error('Error getting meta variations for state page:', metaError?.message || metaError);
+      seoTitle = `Free Government Phone ${stateData.name} | Access FREE Government Phone Service 2025`;
+      seoDescription = `Access federal communication assistance programs in ${stateData.name}. Apply for ACP, Lifeline, and other federal programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+    }
+  } else {
+    seoTitle = `Free Government Phone ${stateData.name} | Access FREE Government Phone Service 2025`;
+    seoDescription = `Access federal communication assistance programs in ${stateData.name}. Apply for ACP, Lifeline, and other federal programs. Available in all ${stateData.name} cities. No cost to eligible residents.`;
+  }
+  seoKeywords = `federal communication assistance ${stateData.name}, ${stateData.name} federal communication, free communication ${stateData.name}, ACP ${stateData.name}, Lifeline ${stateData.name}`;
+
+  // Generate structured data
+  structuredData = {
+    "@context": "https://schema.org",
+    "@type": "State",
+    "name": stateData.name,
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": stateData.abbreviation,
+      "addressCountry": "US"
+    },
+    "description": `Federal communication assistance programs available in ${stateData.name}`,
+    "url": `${SITE_URL}/${stateData.abbreviation.toLowerCase()}/`
+  };
+
 } catch (error) {
   console.error('Failed to initialize Supabase client:', error);
-  // No fallback data - return 404 to prevent duplicate content
   return Astro.redirect('/404');
 }
 
@@ -332,7 +319,7 @@ if (!seoTitle || !seoTitle.includes(stateData.name)) {
             <!-- View All Cities CTA -->
             <div class="text-center mt-8">
               <a 
-                href={`/${stateData.abbreviation.toLowerCase()}/all/`}
+                href="/all"
                 style={`background: ${designDNA.colors.primary};`} class="inline-flex items-center justify-center px-6 py-3 text-white font-semibold rounded-lg transition-colors text-center" onmouseover={`this.style.background='${designDNA.colors.secondary}';`} onmouseout={`this.style.background='${designDNA.colors.primary}';`}
               >
                 View All Cities in {stateData.name}

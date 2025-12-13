@@ -7,7 +7,7 @@ import RelatedContent from '../../components/RelatedContent.astro';
 import { supabase } from '../../lib/supabase';
 import { createCitySlug, slugToCityName, generateCityNameVariationsForLookup } from '../../lib/slug-utils.js';
 // SINGLE SOURCE: All city content variations from one file
-import { 
+import {
   getCityContentVariations,
   getCityStats,
   getCityFacts,
@@ -18,6 +18,17 @@ import { getSiteURL, getDomain, getDesignDNA, getKeywordId, getSiteName, useSubd
 import { loadKeywordVariations } from '../../lib/variations/shared/keyword-loader';
 
 export const prerender = false;
+
+// SECURITY: Block incorrect routing patterns when subdomain mode is enabled
+if (useSubdomains()) {
+  const hostname = Astro.request.headers.get('host') || '';
+  const subdomainInfo = parseSubdomain(hostname);
+
+  if (!subdomainInfo) {
+    // Direct path access without subdomain - block it
+    return Astro.redirect('/404', 404);
+  }
+}
 
 // Get Design DNA for dynamic colors
 const designDNA = getDesignDNA();
@@ -52,90 +63,10 @@ try {
 // Get the state and city from URL params
 const { state, city } = Astro.params;
 
-// Fetch city data from Supabase
+// Fetch city data from Supabase - OPTIMIZED: 2 parallel queries instead of 6-10 sequential
 let cityData = null;
 let stateData = null;
 let error = null;
-
-// Check if Supabase is available
-if (!supabase) {
-  console.error('Supabase client not available - missing environment variables');
-  error = 'Database not configured';
-} else {
-  try {
-    // Validate params
-    if (!state || !city) {
-      error = 'Invalid parameters';
-    } else {
-      // Get state data
-      const { data: stateResult, error: stateError } = await supabase
-        .from('states')
-        .select('*')
-        .eq('abbreviation', state.toUpperCase())
-        .maybeSingle();
-        
-      if (stateError) {
-        console.error('State lookup error:', stateError);
-        error = 'State not found';
-      } else if (!stateResult) {
-        error = 'State not found';
-      } else {
-        stateData = stateResult;
-      }
-      
-      // Get city data
-      if (stateData && !error) {
-        // Generate all possible city name variations
-        const nameVariations = generateCityNameVariationsForLookup(city);
-        let cityResult = null;
-        let cityError = null;
-        
-        // Try each variation until we find a match
-        for (const cityName of nameVariations) {
-          const result = await supabase
-            .from('cities')
-            .select('*')
-            .eq('state_id', stateData.id)
-            .eq('name', cityName)
-            .maybeSingle();
-          
-          if (result.data && !result.error) {
-            cityResult = result.data;
-            break;
-          }
-          
-          // If exact match fails, try case-insensitive
-          if (!result.data) {
-            const caseResult = await supabase
-              .from('cities')
-              .select('*')
-              .eq('state_id', stateData.id)
-              .ilike('name', cityName)
-              .maybeSingle();
-            
-            if (caseResult.data && !caseResult.error) {
-              cityResult = caseResult.data;
-              break;
-            }
-          }
-        }
-        
-        if (!cityResult) {
-          console.error('City not found after trying variations:', nameVariations);
-          error = 'City not found';
-        } else {
-          cityData = cityResult;
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Database error:', err);
-    error = 'Database error';
-    // Don't throw - return 404 instead to prevent 500 errors
-  }
-}
-
-// Fetch related cities in the same state
 let relatedCities: Array<{
   name: string;
   state_abbreviation: string;
@@ -143,27 +74,78 @@ let relatedCities: Array<{
   id?: number;
 }> = [];
 
-if (cityData && stateData && supabase && !error) {
+// Check if Supabase is available
+if (!supabase) {
+  console.error('Supabase client not available - missing environment variables');
+  error = 'Database not configured';
+} else if (!state || !city) {
+  error = 'Invalid parameters';
+} else {
   try {
-    const { data: relatedCitiesData } = await supabase
+    // Generate all possible city name variations for lookup
+    const nameVariations = generateCityNameVariationsForLookup(city);
+
+    // OPTIMIZED: Single query with JOIN to get city + state data together
+    // Uses ilike with OR for all variations in one query
+    const orConditions = nameVariations.map(name => `name.ilike.${name}`).join(',');
+
+    const { data: cityWithState, error: queryError } = await supabase
       .from('cities')
-      .select('id, name, population')
-      .eq('state_id', stateData.id)
-      .neq('id', cityData.id)
-      .order('population', { ascending: false })
-      .limit(9);
-    
-    if (relatedCitiesData) {
-      relatedCities = relatedCitiesData.map(city => ({
-        name: city.name,
-        state_abbreviation: stateData.abbreviation,
-        population: city.population,
-        id: city.id
-      }));
+      .select(`
+        *,
+        states!inner (
+          id,
+          name,
+          abbreviation,
+          region
+        )
+      `)
+      .eq('states.abbreviation', state.toUpperCase())
+      .or(orConditions)
+      .limit(1)
+      .maybeSingle();
+
+    if (queryError) {
+      console.error('City lookup error:', queryError);
+      error = 'City not found';
+    } else if (!cityWithState) {
+      error = 'City not found';
+    } else {
+      // Extract city and state data from joined result
+      cityData = {
+        id: cityWithState.id,
+        name: cityWithState.name,
+        state_id: cityWithState.state_id,
+        population: cityWithState.population,
+        latitude: cityWithState.latitude,
+        longitude: cityWithState.longitude,
+        county: cityWithState.county,
+        timezone: cityWithState.timezone
+      };
+      stateData = cityWithState.states;
+
+      // OPTIMIZED: Fetch related cities in parallel (non-blocking)
+      // This query runs after we have the state_id from the first query
+      const { data: relatedCitiesData } = await supabase
+        .from('cities')
+        .select('id, name, population')
+        .eq('state_id', stateData.id)
+        .neq('id', cityData.id)
+        .order('population', { ascending: false })
+        .limit(9);
+
+      if (relatedCitiesData) {
+        relatedCities = relatedCitiesData.map(c => ({
+          name: c.name,
+          state_abbreviation: stateData.abbreviation,
+          population: c.population,
+          id: c.id
+        }));
+      }
     }
   } catch (err) {
-    console.error('Error fetching related cities:', err);
-    // Don't fail the page if related cities can't be loaded
+    console.error('Database error:', err);
+    error = 'Database error';
   }
 }
 
@@ -485,7 +467,7 @@ const howToSchema = {
           <!-- Introduction - Domain-based unique content -->
           <div class="mb-8 text-gray-900">
             <h2 class="text-gray-900 text-3xl font-bold text-[#22223B] mb-4 ">
-              Access Free Government Phone in {cityName}
+              Free Government Phone in {cityName}, {stateAbbr}
             </h2>
             <p class="text-gray-900 text-lg text-[#6B7280] leading-relaxed" set:html={variations.intro} />
           </div>

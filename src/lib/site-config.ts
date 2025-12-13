@@ -30,16 +30,15 @@ export interface SiteConfig {
 // ===== SITE CONFIG - REPLACED AT BUILD TIME =====
 // DO NOT MODIFY THIS SECTION MANUALLY - IT IS AUTO-GENERATED
 const SITE_CONFIG_DATA = {
-  domain: "government-phone.org",
-  siteName: "Government Phone",
+  domain: "example.com",
+  siteName: "Free Phone Service",
   keyword: "Free Government Phone",
   keywordId: "free-government-phone",
   keywordLabel: "Free Government Phone",
-  ownerEmail: "smartguru6892@gmail.com",
-  designStyle: "advanced" as DesignStyle,
-  useSubdomains: false,
-  environment: "production" as const,
-  createdAt: "2025-12-12T14:16:25.666Z",
+  ownerEmail: "admin@example.com",
+  designStyle: "basic" as DesignStyle,
+  environment: "staging" as const,
+  createdAt: new Date().toISOString(),
   version: "1.0.0"
 };
 // ===== END SITE CONFIG =====
@@ -243,46 +242,65 @@ export function useSubdomains(): boolean {
 }
 
 /**
- * Parse subdomain to extract city and state
- * Format: {city-slug}-{state-abbr}.free-government-phone.org
- * Example: wayne-mi.free-government-phone.org -> { city: 'wayne', state: 'mi' }
+ * State name to abbreviation mapping
+ * Full state names used for subdomains (e.g., kentucky.domain.com)
  */
-export function parseSubdomain(hostname: string): { city: string; state: string } | null {
+export const STATE_NAME_TO_ABBR: Record<string, string> = {
+  'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
+  'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
+  'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
+  'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+  'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
+  'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new-hampshire': 'NH', 'new-jersey': 'NJ',
+  'new-mexico': 'NM', 'new-york': 'NY', 'north-carolina': 'NC', 'north-dakota': 'ND', 'ohio': 'OH',
+  'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode-island': 'RI', 'south-carolina': 'SC',
+  'south-dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
+  'virginia': 'VA', 'washington': 'WA', 'west-virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY',
+  'district-of-columbia': 'DC', 'puerto-rico': 'PR', 'guam': 'GU', 'virgin-islands': 'VI'
+};
+
+/**
+ * State abbreviation to name mapping (reverse lookup)
+ */
+export const STATE_ABBR_TO_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(STATE_NAME_TO_ABBR).map(([name, abbr]) => [abbr.toLowerCase(), name])
+);
+
+/**
+ * Parse subdomain to extract state only
+ * NEW Format: {state-name}.free-government-phone.org
+ * Example: kentucky.free-government-phone.org -> { stateAbbr: 'KY', stateName: 'kentucky' }
+ */
+export function parseSubdomain(hostname: string): { stateAbbr: string; stateName: string } | null {
   const domain = getDomain()
   if (!useSubdomains()) return null
-  
+
   // Remove port if present
   const host = hostname.split(':')[0].toLowerCase()
-  
+
   // Check if it's a subdomain of our domain
   if (!host.endsWith(`.${domain}`)) return null
-  
+
   // Extract subdomain part
   const subdomain = host.replace(`.${domain}`, '')
-  
-  // Skip www and other non-city subdomains
+
+  // Skip www and other non-state subdomains
   if (subdomain === 'www' || subdomain === '') return null
-  
-  // Parse format: {city-slug}-{state-abbr}
-  // Find the last hyphen which should separate city from state
-  const lastHyphenIndex = subdomain.lastIndexOf('-')
-  if (lastHyphenIndex === -1) return null
-  
-  const citySlug = subdomain.substring(0, lastHyphenIndex)
-  const stateAbbr = subdomain.substring(lastHyphenIndex + 1)
-  
-  // Validate state abbreviation is 2 characters
-  if (stateAbbr.length !== 2) return null
-  
+
+  // Check if it's a valid state name
+  const stateAbbr = STATE_NAME_TO_ABBR[subdomain];
+  if (!stateAbbr) return null;
+
   return {
-    city: citySlug,
-    state: stateAbbr.toLowerCase()
+    stateAbbr: stateAbbr,
+    stateName: subdomain
   }
 }
 
 /**
  * Generate subdomain URL for a state
- * Format: https://{state-abbr}.free-government-phone.org/
+ * NEW Format: https://{state-name}.free-government-phone.org/
+ * Example: https://kentucky.free-government-phone.org/
  */
 export function getStateSubdomainURL(stateAbbr: string): string {
   const domain = getDomain()
@@ -290,12 +308,21 @@ export function getStateSubdomainURL(stateAbbr: string): string {
     // Fallback to path-based URL
     return `https://${domain}/${stateAbbr.toLowerCase()}/`
   }
-  return `https://${stateAbbr.toLowerCase()}.${domain}/`
+
+  // Convert abbreviation to full state name
+  const stateName = STATE_ABBR_TO_NAME[stateAbbr.toLowerCase()];
+  if (!stateName) {
+    console.error(`Invalid state abbreviation: ${stateAbbr}`);
+    return `https://${domain}/`;
+  }
+
+  return `https://${stateName}.${domain}/`
 }
 
 /**
  * Generate subdomain URL for a city
- * Format: https://{city-slug}-{state-abbr}.free-government-phone.org/
+ * NEW Format: https://{state-name}.free-government-phone.org/{city-slug}-{state-abbr}.php
+ * Example: https://kentucky.free-government-phone.org/paducah-ky.php
  */
 export function getCitySubdomainURL(citySlug: string, stateAbbr: string): string {
   const domain = getDomain()
@@ -303,7 +330,15 @@ export function getCitySubdomainURL(citySlug: string, stateAbbr: string): string
     // Fallback to path-based URL
     return `https://${domain}/${stateAbbr.toLowerCase()}/${citySlug}/`
   }
-  return `https://${citySlug}-${stateAbbr.toLowerCase()}.${domain}/`
+
+  // Convert abbreviation to full state name
+  const stateName = STATE_ABBR_TO_NAME[stateAbbr.toLowerCase()];
+  if (!stateName) {
+    console.error(`Invalid state abbreviation: ${stateAbbr}`);
+    return `https://${domain}/`;
+  }
+
+  return `https://${stateName}.${domain}/${citySlug}-${stateAbbr.toLowerCase()}.php`
 }
 
 /**
