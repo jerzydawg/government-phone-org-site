@@ -31,6 +31,7 @@ export interface SiteConfig {
 // DO NOT MODIFY THIS SECTION MANUALLY - IT IS AUTO-GENERATED
 const SITE_CONFIG_DATA = {
   domain: "government-phone.org",
+  useSubdomains: false,
   siteName: "Free Phone Service",
   keyword: "Free Government Phone",
   keywordId: "free-government-phone",
